@@ -3,6 +3,10 @@ import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import { getAllProducts } from "@/lib/products";
 
+// Force dynamic rendering to always fetch fresh data from Supabase
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function CollectionPage() {
   const products = await getAllProducts();
 
