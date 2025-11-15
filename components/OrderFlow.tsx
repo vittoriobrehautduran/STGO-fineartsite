@@ -33,7 +33,7 @@ const STANDARD_SIZES: Size[] = [
   { width: 60, height: 90, unit: "cm", basePrice: 699 },
 ];
 
-type Step = "upload" | "upload-success" | "options" | "review" | "processing";
+type Step = "upload" | "upload-success" | "options" | "review";
 
 export default function OrderFlow() {
   const router = useRouter();
@@ -43,6 +43,7 @@ export default function OrderFlow() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
   // Options
   const [mediaTypes, setMediaTypes] = useState<MediaType[]>([]);
@@ -205,7 +206,7 @@ export default function OrderFlow() {
       return;
     }
 
-    setStep("processing");
+    setIsProcessingOrder(true);
     setError(null);
 
     try {
@@ -247,7 +248,7 @@ export default function OrderFlow() {
     } catch (err: any) {
       console.error("Error creating order:", err);
       setError(err.message || "Error al crear el pedido. Por favor, intenta de nuevo.");
-      setStep("review");
+      setIsProcessingOrder(false);
     }
   };
 
@@ -697,10 +698,10 @@ export default function OrderFlow() {
             </button>
             <button
               onClick={handleCreateOrder}
-              disabled={step === "processing"}
+              disabled={isProcessingOrder}
               className="flex-1 px-6 py-2 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {step === "processing" ? "Procesando..." : "Continuar al Pago"}
+              {isProcessingOrder ? "Procesando..." : "Continuar al Pago"}
             </button>
           </div>
         </div>
