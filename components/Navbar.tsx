@@ -313,6 +313,14 @@ export default function Navbar() {
       </button>
       )}
 
+      {/* Mobile Menu Overlay - Dark background when menu is open */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[45] max-[525px]:block hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Navigation Bar - Desktop: Can hide/show, Mobile: Always visible when menu is open */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
@@ -345,46 +353,38 @@ export default function Navbar() {
             })}
           </div>
         </div>
-
-        {/* Mobile Navigation Menu - Only visible on screens < 525px */}
-        <div
-          className={`max-[525px]:block hidden fixed top-0 left-0 right-0 bg-white shadow-lg transition-transform duration-300 ease-in-out ${
-            isMobileMenuOpen ? "translate-y-0" : "-translate-y-full"
-          }`}
-          style={{ paddingTop: "80px" }}
-        >
-          <div className="flex flex-col px-4 py-6 space-y-4">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={`nav-link relative font-medium text-base py-2 transition-colors duration-200 ${
-                    isActive
-                      ? "text-gray-900 font-semibold"
-                      : "text-gray-700 hover:text-gray-900"
-                  }`}
-                >
-                  {link.label}
-                  {isActive && (
-                    <span className="nav-underline absolute bottom-0 left-0 h-0.5 bg-gray-900 nav-underline-active" />
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
       </nav>
 
-      {/* Mobile Menu Overlay - Dark background when menu is open */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-[45] max-[525px]:block hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
+      {/* Mobile Navigation Menu - Only visible on screens < 525px, rendered outside nav to avoid DOM issues */}
+      <div
+        className={`max-[525px]:block hidden fixed top-0 left-0 right-0 bg-white shadow-lg transition-transform duration-300 ease-in-out z-[60] ${
+          isMobileMenuOpen ? "translate-y-0" : "-translate-y-full"
+        }`}
+        style={{ paddingTop: "80px" }}
+      >
+        <div className="flex flex-col px-4 py-6 space-y-4">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`nav-link relative font-medium text-base py-2 transition-colors duration-200 ${
+                  isActive
+                    ? "text-gray-900 font-semibold"
+                    : "text-gray-700 hover:text-gray-900"
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="nav-underline absolute bottom-0 left-0 h-0.5 bg-gray-900 nav-underline-active" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
     </>
   );
 }
