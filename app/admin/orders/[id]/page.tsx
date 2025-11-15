@@ -93,8 +93,8 @@ export default function OrderDetailPage() {
       if (error) throw error;
 
       // Create download link
-      const blob = await data.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      // data is already a Blob from Supabase storage
+      const downloadUrl = window.URL.createObjectURL(data);
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = `order-${orderId}-${filePath.split("/").pop()}`;
