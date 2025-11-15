@@ -10,7 +10,6 @@ import Link from "next/link";
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const sessionId = searchParams.get("session_id");
   const orderId = searchParams.get("order_id");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -32,22 +31,8 @@ export default function CheckoutSuccessPage() {
 
         if (orderError) throw orderError;
 
-        // If payment was successful, update order status
-        if (orderData.status === "pending" && sessionId) {
-          // Verify with Stripe (you can add webhook verification here)
-          // For now, we'll update the status to 'paid'
-          await supabase
-            .from("orders")
-            .update({
-              status: "paid",
-              stripe_payment_intent_id: sessionId,
-            })
-            .eq("id", orderId);
-
-          setOrder({ ...orderData, status: "paid" });
-        } else {
-          setOrder(orderData);
-        }
+        // Set order data
+        setOrder(orderData);
       } catch (err: any) {
         console.error("Error verifying payment:", err);
       } finally {
@@ -56,7 +41,7 @@ export default function CheckoutSuccessPage() {
     }
 
     verifyPayment();
-  }, [orderId, sessionId]);
+  }, [orderId]);
 
   if (loading) {
     return (

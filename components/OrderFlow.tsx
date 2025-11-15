@@ -242,26 +242,8 @@ export default function OrderFlow() {
 
       if (itemError) throw itemError;
 
-      // For now, show success message instead of redirecting to Stripe
-      // TODO: Uncomment when Stripe is set up
-      // router.push(`/checkout?orderId=${orderData.id}`);
-      
-      // Show success with order details
-      setStep("processing");
-      setTimeout(() => {
-        alert(`¡Pedido creado exitosamente!\n\nID del Pedido: ${orderData.id}\n\nLa imagen ha sido subida a Supabase.\nPuedes verificar en la tabla 'orders' y el bucket 'customer-uploads'.\n\nPago será implementado próximamente.`);
-        // Reset form
-        setFile(null);
-        setPreview(null);
-        setUploadedImageUrl(null);
-        setSelectedMediaType(null);
-        setSelectedSize(null);
-        setSelectedFraming(null);
-        setCustomerEmail("");
-        setCustomerName("");
-        setCustomerPhone("");
-        setStep("upload");
-      }, 1000);
+      // Redirect to checkout page
+      router.push(`/checkout?orderId=${orderData.id}`);
     } catch (err: any) {
       console.error("Error creating order:", err);
       setError(err.message || "Error al crear el pedido. Por favor, intenta de nuevo.");
