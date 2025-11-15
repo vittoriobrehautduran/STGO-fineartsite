@@ -26,6 +26,12 @@ export default function CheckoutPage() {
         const data = await response.json();
 
         if (!response.ok) {
+          // If Stripe is not configured, show a message instead of error
+          if (data.configured === false || response.status === 503) {
+            setError("El sistema de pago no está configurado. Tu pedido ha sido guardado. Por favor, contacta con nosotros para completar el pago.");
+            setLoading(false);
+            return;
+          }
           throw new Error(data.error || "Error al crear la sesión de pago");
         }
 

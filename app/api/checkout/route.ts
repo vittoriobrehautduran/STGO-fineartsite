@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
-});
+// Only import and initialize Stripe if the secret key is available
+// Using dynamic import to avoid build errors when Stripe is not configured
+let stripe: any = null;
+
+async function initializeStripe() {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return null;
+  }
+  
+  try {
+    const Stripe = (await import("stripe")).default;
+    return new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2025-02-24.acacia" as any,
+    });
+  } catch (error) {
+    console.warn("Stripe not available:", error);
+    return null;
+  }
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -14,6 +29,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       { error: "Order ID is required" },
       { status: 400 }
+    );
+  }
+
+  // Initialize Stripe if not already done
+  if (!stripe) {
+    stripe = await initializeStripe();
+  }
+
+  // Check if Stripe is configured
+  if (!stripe || !process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json(
+      { 
+        error: "Payment processing is not configured. Please contact support.",
+        configured: false 
+      },
+      { status: 503 }
     );
   }
 
