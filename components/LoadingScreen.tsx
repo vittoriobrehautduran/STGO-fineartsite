@@ -21,6 +21,7 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
     if (hasCompleted.current) return; // Prevent double execution
 
+    let isMounted = true;
     let loadedImages = 0;
     const totalImages = imagesToPreload.length;
     const baseProgress = 20; // Reserve 20% for base loading
@@ -32,12 +33,14 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
       return new Promise<void>((resolve) => {
         const img = new window.Image();
         img.onload = () => {
+          if (!isMounted) return;
           loadedImages++;
           const imageProgressValue = baseProgress + (loadedImages / totalImages) * imageProgress;
           setProgress(Math.min(imageProgressValue, baseProgress + imageProgress));
           resolve();
         };
         img.onerror = () => {
+          if (!isMounted) return;
           loadedImages++;
           const imageProgressValue = baseProgress + (loadedImages / totalImages) * imageProgress;
           setProgress(Math.min(imageProgressValue, baseProgress + imageProgress));
@@ -49,33 +52,48 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
 
     // Wait for fonts to load
     const fontPromise = document.fonts.ready.then(() => {
-      setProgress((prev) => Math.min(prev + fontProgress, 100));
+      if (isMounted) {
+        setProgress((prev) => Math.min(prev + fontProgress, 100));
+      }
     });
 
     // Start with base progress
     setProgress(baseProgress);
 
+    let timeout1: NodeJS.Timeout | null = null;
+    let timeout2: NodeJS.Timeout | null = null;
+
     // Wait for all images and fonts
     Promise.all([...imagePromises, fontPromise]).then(() => {
+      if (!isMounted) return;
+      
       // Ensure we're at 100%
       setProgress(100);
       
       // Small delay to show 100%
-      setTimeout(() => {
-        if (!hasCompleted.current) {
-          hasCompleted.current = true;
-          setIsFadingOut(true);
-          setTimeout(() => {
+      timeout1 = setTimeout(() => {
+        if (!isMounted || hasCompleted.current) return;
+        hasCompleted.current = true;
+        setIsFadingOut(true);
+        timeout2 = setTimeout(() => {
+          if (isMounted) {
             onComplete();
-          }, 500);
-        }
+          }
+        }, 500);
       }, 200);
     });
+
+    // Cleanup on unmount
+    return () => {
+      isMounted = false;
+      if (timeout1) clearTimeout(timeout1);
+      if (timeout2) clearTimeout(timeout2);
+    };
   }, [onComplete]);
 
   return (
     <div
-      className={`fixed inset-0 z-[100] bg-stone-50 flex flex-col items-center justify-center ${
+      className={`fixed inset-0 z-[10000] bg-stone-50 flex flex-col items-center justify-center ${
         isFadingOut ? "animate-fade-out" : ""
       }`}
     >

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -84,6 +85,12 @@ export default function UploadSection() {
             <h3 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 leading-tight tracking-tight">
               Fácil de subir tus imágenes con solicitudes especiales disponibles
             </h3>
+            <Link
+              href="/upload"
+              className="inline-block w-fit px-8 py-4 bg-gray-900 text-white text-lg sm:text-xl font-semibold rounded-lg hover:bg-gray-800 transition-colors duration-200 mb-6"
+            >
+              Imprime tu foto
+            </Link>
             <p className="text-lg sm:text-xl md:text-2xl text-gray-700 leading-relaxed font-normal">
               Sube tus fotografías y obras de arte de manera sencilla a través
               de nuestra plataforma. Ofrecemos atención personalizada para
