@@ -1,12 +1,3 @@
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  sizes: ProductSize[];
-  framingOptions: FramingOption[];
-}
 
 export interface ProductSize {
   id: string;
@@ -21,5 +12,22 @@ export interface FramingOption {
   name: string;
   description: string;
   price: number;
+}
+
+export interface MediaType {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  sizes: ProductSize[];
+  framingOptions: FramingOption[];
+  mediaTypes?: MediaType[];
 }
 

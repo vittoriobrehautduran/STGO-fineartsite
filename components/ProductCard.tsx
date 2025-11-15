@@ -46,7 +46,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Please select a size");
+      alert("Por favor selecciona un tamaño");
       return;
     }
     // TODO: Implement cart functionality
@@ -73,7 +73,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <>
       {/* Product Card Preview */}
-      <div className="bg-stone-50 rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div className="relative aspect-[3/4]">
             <Image
@@ -83,23 +83,23 @@ export default function ProductCard({ product }: ProductCardProps) {
               className="object-cover"
             />
           </div>
-          <div className="p-4 sm:p-6 flex flex-col justify-between">
+              <div className="p-6 sm:p-8 flex flex-col justify-between">
             <div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
                 {product.name}
               </h3>
-              <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 line-clamp-3">
+              <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8 line-clamp-3 leading-relaxed font-light">
                 {product.description}
               </p>
               <div>
                 <p className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
-                  From ${product.price}
+                  Desde ${product.price}
                 </p>
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="w-full bg-gray-900 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-800 transition-colors duration-200"
+                  className="w-full bg-gray-900 text-white py-3 sm:py-4 px-6 sm:px-8 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-800 transition-all duration-300 hover:shadow-lg tracking-wide"
                 >
-                  View Details
+                  Ver Detalles
                 </button>
               </div>
             </div>
@@ -120,7 +120,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Modal Content - centered */}
             <div
-              className="relative bg-stone-50 rounded-lg shadow-2xl w-full max-w-4xl md:max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up z-10 pointer-events-auto"
+              className="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl md:max-w-5xl max-h-[90vh] overflow-y-auto animate-slide-up z-10 pointer-events-auto border border-gray-100"
               onClick={(e) => e.stopPropagation()}
             >
             {/* Close Button */}
@@ -154,44 +154,60 @@ export default function ProductCard({ product }: ProductCardProps) {
                   className="object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
                 />
               </div>
-              <div className="p-4 sm:p-6">
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
+              <div className="p-6 sm:p-8">
+                <div className="w-16 h-0.5 bg-gray-900 mb-6"></div>
+                <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
                   {product.name}
                 </h3>
-                <p className="text-base sm:text-lg text-gray-600 mb-6">
+                <p className="text-base sm:text-lg text-gray-600 mb-8 leading-relaxed font-light">
                   {product.description}
                 </p>
 
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
-                      Select Size
+                      Seleccionar Tamaño
                     </h4>
-                    <div className="grid grid-cols-2 gap-3">
+                    <select
+                      value={selectedSize || ""}
+                      onChange={(e) => setSelectedSize(e.target.value)}
+                      className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl text-base text-gray-900 bg-white focus:border-gray-900 focus:outline-none transition-all duration-300 hover:border-gray-400 shadow-sm"
+                    >
+                      <option value="">Elegir tamaño</option>
                       {product.sizes.map((size) => (
-                        <button
-                          key={size.id}
-                          onClick={() => setSelectedSize(size.id)}
-                          className={`p-3 border-2 rounded-lg text-left transition-all duration-200 ${
-                            selectedSize === size.id
-                              ? "border-gray-900 bg-gray-50 scale-105"
-                              : "border-gray-200 hover:border-gray-400"
-                          }`}
-                        >
-                          <div className="font-medium text-base text-gray-900">
-                            {size.width}" × {size.height}"
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            ${size.price}
-                          </div>
-                        </button>
+                        <option key={size.id} value={size.id}>
+                          {size.width} cm × {size.height} cm - ${size.price}
+                        </option>
                       ))}
-                    </div>
+                    </select>
                   </div>
+
+                  {product.mediaTypes && product.mediaTypes.length > 0 && (
+                    <div>
+                      <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                        Opciones de Medio
+                      </h4>
+                      <div className="space-y-2">
+                        {product.mediaTypes.map((media) => (
+                          <div
+                            key={media.id}
+                            className="p-3 border-2 border-gray-200 rounded-lg bg-gray-50"
+                          >
+                            <div className="font-medium text-base text-gray-900">
+                              {media.name}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {media.description}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <h4 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
-                      Framing Options
+                      Opciones de Enmarcado
                     </h4>
                     <div className="space-y-2">
                       {product.framingOptions.map((option) => (
@@ -236,9 +252,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </div>
                     <button
                       onClick={handleAddToCart}
-                      className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg text-base font-semibold hover:bg-gray-800 transition-colors duration-200"
+                      className="w-full bg-gray-900 text-white py-4 px-8 rounded-xl text-base font-semibold hover:bg-gray-800 transition-all duration-300 hover:shadow-lg tracking-wide"
                     >
-                      Add to Cart
+                      Agregar al Carrito
                     </button>
                   </div>
                 </div>

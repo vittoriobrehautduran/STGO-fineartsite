@@ -1,36 +1,76 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface LoadingScreenProps {
   onComplete: () => void;
 }
 
+// List of all images to preload
+const imagesToPreload = [
+  "/images/heroimg4.jpg",
+  "/images/homepageimg/portrait_woman.jpg",
+  "/images/homepageimg/car_dark.jpg",
+];
+
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
+  const hasCompleted = useRef(false);
 
   useEffect(() => {
-    const duration = 2000; // 2 seconds total
-    const interval = 16; // ~60fps
-    const increment = 100 / (duration / interval);
+    if (hasCompleted.current) return; // Prevent double execution
 
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        const next = prev + increment;
-        if (next >= 100) {
-          clearInterval(timer);
+    let loadedImages = 0;
+    const totalImages = imagesToPreload.length;
+    const baseProgress = 20; // Reserve 20% for base loading
+    const imageProgress = 70; // 70% for images
+    const fontProgress = 10; // 10% for fonts
+
+    // Preload all images
+    const imagePromises = imagesToPreload.map((src) => {
+      return new Promise<void>((resolve) => {
+        const img = new window.Image();
+        img.onload = () => {
+          loadedImages++;
+          const imageProgressValue = baseProgress + (loadedImages / totalImages) * imageProgress;
+          setProgress(Math.min(imageProgressValue, baseProgress + imageProgress));
+          resolve();
+        };
+        img.onerror = () => {
+          loadedImages++;
+          const imageProgressValue = baseProgress + (loadedImages / totalImages) * imageProgress;
+          setProgress(Math.min(imageProgressValue, baseProgress + imageProgress));
+          resolve(); // Continue even if image fails
+        };
+        img.src = src;
+      });
+    });
+
+    // Wait for fonts to load
+    const fontPromise = document.fonts.ready.then(() => {
+      setProgress((prev) => Math.min(prev + fontProgress, 100));
+    });
+
+    // Start with base progress
+    setProgress(baseProgress);
+
+    // Wait for all images and fonts
+    Promise.all([...imagePromises, fontPromise]).then(() => {
+      // Ensure we're at 100%
+      setProgress(100);
+      
+      // Small delay to show 100%
+      setTimeout(() => {
+        if (!hasCompleted.current) {
+          hasCompleted.current = true;
           setIsFadingOut(true);
           setTimeout(() => {
             onComplete();
           }, 500);
-          return 100;
         }
-        return next;
-      });
-    }, interval);
-
-    return () => clearInterval(timer);
+      }, 200);
+    });
   }, [onComplete]);
 
   return (

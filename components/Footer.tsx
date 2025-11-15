@@ -16,7 +16,7 @@ export default function Footer() {
     if (!footer) return;
 
     // Fade in footer
-    gsap.fromTo(
+    const footerAnimation = gsap.fromTo(
       footer,
       { opacity: 0, y: 50 },
       {
@@ -28,12 +28,16 @@ export default function Footer() {
           trigger: footer,
           start: "top 85%",
           toggleActions: "play none none none",
+          id: "footer-fade",
         },
       }
     );
 
+    const footerTrigger = ScrollTrigger.getById("footer-fade");
+
     return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      if (footerTrigger) footerTrigger.kill();
+      if (footerAnimation) footerAnimation.kill();
     };
   }, []);
 
@@ -103,13 +107,14 @@ export default function Footer() {
               STGO Fine Art
             </h3>
             <p className="text-xs sm:text-sm leading-relaxed">
-              Transforming moments into museum-quality fine art prints with
-              expert framing and professional installation services.
+              Transformando momentos en impresiones de arte fino de calidad
+              museo con enmarcado experto y servicios profesionales de
+              instalación.
             </p>
           </div>
           <div>
             <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
-              Quick Links
+              Enlaces Rápidos
             </h4>
             <ul className="space-y-2">
               <li>
@@ -117,7 +122,7 @@ export default function Footer() {
                   href="/"
                   className="text-sm sm:text-base hover:text-white transition-colors duration-200"
                 >
-                  Home
+                  Inicio
                 </Link>
               </li>
               <li>
@@ -125,7 +130,7 @@ export default function Footer() {
                   href="/collection"
                   className="text-sm sm:text-base hover:text-white transition-colors duration-200"
                 >
-                  Collection
+                  Colección
                 </Link>
               </li>
               <li>
@@ -133,7 +138,15 @@ export default function Footer() {
                   href="/framing"
                   className="text-sm sm:text-base hover:text-white transition-colors duration-200"
                 >
-                  Framing
+                  Enmarcado
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/upload"
+                  className="text-sm sm:text-base hover:text-white transition-colors duration-200"
+                >
+                  Subir
                 </Link>
               </li>
               <li>
@@ -141,14 +154,14 @@ export default function Footer() {
                   href="/contact"
                   className="text-sm sm:text-base hover:text-white transition-colors duration-200"
                 >
-                  Contact
+                  Contacto
                 </Link>
               </li>
             </ul>
           </div>
           <div>
             <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
-              Follow Us
+              Síguenos
             </h4>
             <div className="flex gap-4">
               {socialLinks.map((social) => (
@@ -167,7 +180,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t border-gray-800 pt-6 sm:pt-8 text-center text-xs sm:text-sm">
-          <p>© {currentYear} STGO Fine Art. All rights reserved.</p>
+          <p>© {currentYear} STGO Fine Art. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>

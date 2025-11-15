@@ -15,7 +15,7 @@ export default function ContactPage() {
     e.preventDefault();
     // TODO: Implement form submission with backend
     console.log("Form submitted:", formData);
-    alert("Thank you for your message! We'll get back to you soon.");
+    alert("¡Gracias por tu mensaje! Te responderemos pronto.");
     setFormData({ name: "", email: "", message: "" });
   };
 
@@ -31,21 +31,27 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-stone-50">
       <Navbar />
-      <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
+      <section className="pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 md:pb-28 px-4 sm:px-6">
         <div className="container mx-auto max-w-2xl">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center mb-8 sm:mb-12 text-gray-900 animate-fade-in">
-            Contact Us
-          </h1>
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="inline-block w-20 h-0.5 bg-gray-900 mb-6"></div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-center mb-4 text-gray-900 tracking-tight">
+              Contáctanos
+            </h1>
+            <p className="text-gray-600 text-lg font-light">
+              Estamos aquí para ayudarte con cualquier consulta
+            </p>
+          </div>
           <form
             onSubmit={handleSubmit}
-            className="space-y-6 animate-slide-up delay-100"
+            className="space-y-6 bg-white rounded-2xl p-8 sm:p-10 shadow-lg border border-gray-100"
           >
             <div>
               <label
                 htmlFor="name"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Name
+                Nombre
               </label>
               <input
                 type="text"
@@ -54,7 +60,7 @@ export default function ContactPage() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all duration-300 hover:border-gray-400 bg-white shadow-sm"
               />
             </div>
             <div>
@@ -62,7 +68,7 @@ export default function ContactPage() {
                 htmlFor="email"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Email
+                Correo Electrónico
               </label>
               <input
                 type="email"
@@ -71,7 +77,7 @@ export default function ContactPage() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none transition-all duration-300 hover:border-gray-400 bg-white shadow-sm"
               />
             </div>
             <div>
@@ -79,7 +85,7 @@ export default function ContactPage() {
                 htmlFor="message"
                 className="block text-sm font-medium text-gray-900 mb-2"
               >
-                Message
+                Mensaje
               </label>
               <textarea
                 id="message"
@@ -88,14 +94,14 @@ export default function ContactPage() {
                 onChange={handleChange}
                 required
                 rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none resize-none"
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none resize-none transition-all duration-300 hover:border-gray-400 bg-white shadow-sm"
               />
             </div>
             <button
               type="submit"
-              className="w-full bg-gray-900 text-white py-3 px-6 rounded-lg font-semibold hover:bg-gray-800 transition-colors duration-200"
+              className="w-full bg-gray-900 text-white py-4 px-8 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-300 hover:shadow-lg tracking-wide mt-8"
             >
-              Send Message
+              Enviar Mensaje
             </button>
           </form>
         </div>
