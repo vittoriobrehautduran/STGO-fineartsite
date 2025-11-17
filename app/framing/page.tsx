@@ -163,7 +163,7 @@ export default function FramingPage() {
     {
       name: "Papel Fine Art",
       description:
-        "Papel de archivo de calidad museo, diseñado para preservar tus obras durante generaciones. Sin ácidos y con protección UV integrada.",
+        "Papel 100% algodón, diseñado para preservar tus obras durante generaciones. Sin ácidos y con protección UV integrada.",
       specs: ["Calidad museo", "Sin ácidos", "Protección UV"],
     },
     {
