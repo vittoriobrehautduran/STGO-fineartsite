@@ -132,11 +132,6 @@ export default function ContactPage() {
                         ) : (
                           <p className="text-gray-600">{info.content}</p>
                         )}
-                        {info.subContent && (
-                          <p className="text-gray-600 text-sm mt-1">
-                            {info.subContent}
-                          </p>
-                        )}
                       </div>
                     </div>
                   ))}
