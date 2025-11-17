@@ -117,9 +117,15 @@ export default function FeaturedProducts() {
           >
             Colección Destacada
           </h2>
-          <p className="text-gray-600 text-lg font-light max-w-2xl mx-auto">
+          <p className="text-gray-600 text-lg font-light max-w-2xl mx-auto mb-8">
             Descubre nuestras piezas más exclusivas, seleccionadas por su calidad excepcional
           </p>
+          <Link
+            href="/collection"
+            className="inline-block px-8 py-4 bg-gray-900 text-white text-lg font-semibold rounded-lg hover:bg-gray-800 transition-all duration-300 hover:shadow-lg"
+          >
+            Ver Colección Completa
+          </Link>
         </div>
         {loading ? (
           <div className="flex items-center justify-center py-20">

@@ -75,14 +75,18 @@ export default function ProductCard({ product }: ProductCardProps) {
       {/* Product Card Preview */}
       <div className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-2xl border border-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          <div className="relative aspect-[3/4]">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="relative aspect-[3/4] cursor-pointer overflow-hidden"
+            aria-label={`Ver detalles de ${product.name}`}
+          >
             <Image
               src={product.image}
               alt={product.name}
               fill
               className="object-cover"
             />
-          </div>
+          </button>
               <div className="p-6 sm:p-8 flex flex-col justify-between">
             <div>
               <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">

@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import Process from "@/components/Process";
+import TrustIndicators from "@/components/TrustIndicators";
 import UploadSection from "@/components/UploadSection";
 import Story from "@/components/Story";
 import Footer from "@/components/Footer";
@@ -92,6 +94,8 @@ export default function Home() {
             <Hero />
             <FeaturedProducts />
             <UploadSection />
+            <Process />
+            <TrustIndicators />
             <Story />
             <Footer />
           </>

@@ -2,6 +2,7 @@
 
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 import { useState } from "react";
 
 export default function ContactPage() {
@@ -13,6 +14,7 @@ export default function ContactPage() {
     message: "",
   });
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<{
     type: "success" | "error" | null;
@@ -21,6 +23,15 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!acceptedTerms) {
+      setSubmitStatus({
+        type: "error",
+        message: "Debes aceptar los términos y condiciones para continuar.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: "" });
 
@@ -44,6 +55,7 @@ export default function ContactPage() {
         message: "¡Gracias por tu mensaje! Te responderemos pronto.",
       });
       setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
+      setAcceptedTerms(false);
 
       // Clear success message after 5 seconds
       setTimeout(() => {
@@ -66,6 +78,10 @@ export default function ContactPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAcceptedTerms(e.target.checked);
   };
 
   const contactInfo = [
@@ -131,7 +147,7 @@ export default function ContactPage() {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Information */}
-            <div className="space-y-6">
+            <div className="space-y-6 lg:order-2">
               <div className="bg-white rounded-2xl p-8 sm:p-10 shadow-lg border border-gray-100">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   Información de Contacto
@@ -204,16 +220,20 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div>
+            <div className="lg:order-1">
               <form
                 onSubmit={handleSubmit}
-                className="bg-white rounded-2xl p-8 sm:p-10 shadow-lg border border-gray-100 space-y-6"
+                className="bg-white rounded-3xl p-10 sm:p-12 shadow-2xl border-2 border-gray-900 space-y-6 relative overflow-hidden"
               >
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+                {/* Accent bar at the top */}
+                <div className="absolute top-0 left-0 right-0 h-2 bg-gray-900"></div>
+                
+                <div className="pt-4">
+                  <div className="inline-block w-16 h-0.5 bg-gray-900 mb-4"></div>
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                     Envíanos un Mensaje
                   </h2>
-                  <p className="text-gray-600 font-light">
+                  <p className="text-lg sm:text-xl text-gray-600 font-light">
                     Completa el formulario y nos pondremos en contacto contigo lo antes posible.
                   </p>
                 </div>
@@ -357,9 +377,40 @@ export default function ContactPage() {
                   </div>
                 )}
 
+                <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    name="terms"
+                    checked={acceptedTerms}
+                    onChange={handleTermsChange}
+                    required
+                    className="mt-1 w-5 h-5 text-gray-900 border-gray-300 rounded focus:ring-gray-900 focus:ring-2 cursor-pointer"
+                  />
+                  <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
+                    Acepto los{" "}
+                    <Link
+                      href="/policies"
+                      target="_blank"
+                      className="text-gray-900 font-semibold underline hover:text-gray-700"
+                    >
+                      términos y condiciones
+                    </Link>
+                    {" "}y la{" "}
+                    <Link
+                      href="/policies"
+                      target="_blank"
+                      className="text-gray-900 font-semibold underline hover:text-gray-700"
+                    >
+                      política de privacidad
+                    </Link>
+                    . *
+                  </label>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !acceptedTerms}
                   className="w-full bg-gray-900 text-white py-4 px-8 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-300 hover:shadow-lg tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? "Enviando..." : "Enviar Mensaje"}

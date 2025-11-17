@@ -161,6 +161,19 @@ export default function Footer() {
           </div>
           <div>
             <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4">
+              Legal
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/policies"
+                  className="text-sm sm:text-base hover:text-white transition-colors duration-200"
+                >
+                  Políticas y Términos
+                </Link>
+              </li>
+            </ul>
+            <h4 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 mt-6">
               Síguenos
             </h4>
             <div className="flex gap-4">

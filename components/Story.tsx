@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -80,11 +81,19 @@ export default function Story() {
             desde la entrega hasta la colocación final, haciendo que todo el
             proceso sea fluido y sin estrés.
           </p>
-          <p className="text-gray-900 font-medium">
+          <p className="text-gray-900 font-medium mb-8">
             Experimenta la diferencia de la verdadera impresión de arte fino.
             Permítenos ayudarte a crear algo hermoso que será atesorado durante
             años.
           </p>
+          <div className="text-center">
+            <Link
+              href="/contact"
+              className="inline-block px-10 py-5 bg-gray-900 text-white text-xl font-semibold rounded-xl hover:bg-gray-800 transition-all duration-300 hover:shadow-2xl hover:scale-105"
+            >
+              Contáctanos
+            </Link>
+          </div>
         </div>
       </div>
     </section>

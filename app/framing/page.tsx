@@ -126,22 +126,73 @@ export default function FramingPage() {
       name: "Madera Natural",
       description:
         "Marco elegante de madera natural que aporta calidez y un toque orgánico a tus obras. Perfecto para crear un ambiente acogedor y sofisticado.",
-      color: "bg-amber-50 border-amber-200",
+      barColor: "bg-amber-600",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
       features: ["Madera de alta calidad", "Acabado natural", "Protección UV"],
     },
     {
       name: "Negro Clásico",
       description:
         "Marco negro clásico y atemporal que realza cualquier obra de arte. Ideal para un look moderno y minimalista que nunca pasa de moda.",
-      color: "bg-gray-900 border-gray-800 text-white",
+      barColor: "bg-gray-900",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+      ),
       features: ["Diseño atemporal", "Versátil y elegante", "Vidrio protector"],
     },
     {
       name: "Solo Impresión",
       description:
         "Solo la impresión con respaldo de cartón duro de alta calidad. Sin marco, perfecto para un estilo minimalista o para enmarcar posteriormente.",
-      color: "bg-stone-100 border-stone-300",
+      barColor: "bg-stone-400",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
       features: ["Cartón duro premium", "Sin marco", "Listo para enmarcar"],
+    },
+    {
+      name: "Plateado",
+      description:
+        "Marco plateado elegante y moderno que aporta un toque sofisticado y contemporáneo. Perfecto para obras que buscan un acabado brillante y refinado.",
+      barColor: "bg-gray-400",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+      features: ["Acabado metálico", "Brillo elegante", "Diseño moderno"],
+    },
+    {
+      name: "Dorado",
+      description:
+        "Marco dorado lujoso que añade un toque de elegancia y opulencia a cualquier obra. Ideal para piezas que requieren un acabado premium y distinguido.",
+      barColor: "bg-yellow-500",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+      features: ["Acabado dorado premium", "Elegancia clásica", "Vidrio protector"],
+    },
+    {
+      name: "Blanco",
+      description:
+        "Marco blanco limpio y minimalista que realza la pureza de tus obras. Perfecto para espacios modernos y luminosos que buscan un estilo fresco y atemporal.",
+      barColor: "bg-white border border-gray-300",
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      features: ["Diseño minimalista", "Versátil y limpio", "Protección UV"],
     },
   ];
 
@@ -183,128 +234,150 @@ export default function FramingPage() {
       >
         <div className="container mx-auto max-w-7xl">
           {/* Header */}
-          <div className="text-center mb-16 sm:mb-20">
-            <div className="inline-block w-20 h-0.5 bg-gray-900 mb-6"></div>
+          <div className="text-center mb-20 sm:mb-24">
+            <div className="inline-block w-20 h-0.5 bg-gray-900 mb-8"></div>
             <h1
               ref={titleRef}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-center mb-4 text-gray-900 tracking-tight"
+              className="text-4xl sm:text-5xl md:text-6xl font-bold text-center mb-6 text-gray-900 tracking-tight"
             >
               Servicios de Enmarcado
             </h1>
-            <p className="text-gray-600 text-lg font-light max-w-2xl mx-auto">
+            <p className="text-gray-600 text-xl sm:text-2xl font-light max-w-3xl mx-auto leading-relaxed">
               Ofrecemos enmarcado profesional de alta calidad para preservar y
-              realzar tus obras de arte
+              realzar tus obras de arte. Cada marco es cuidadosamente seleccionado
+              para complementar y proteger tu pieza única.
             </p>
           </div>
 
           {/* Frame Types */}
-          <div className="mb-20 sm:mb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
+          <div className="mb-24 sm:mb-32">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Tipos de Marcos
             </h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto font-light">
+                Selecciona el estilo perfecto que complemente tu obra de arte
+              </p>
+            </div>
             <div
               ref={framesRef}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10"
             >
               {frameTypes.map((frame, index) => (
                 <div
                   key={index}
-                  className={`frame-card ${frame.color} rounded-2xl p-8 sm:p-10 shadow-lg border-2 transition-all duration-300 hover:shadow-xl`}
+                  className="frame-card bg-white rounded-3xl p-0 shadow-xl border-2 border-gray-200 transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] group overflow-hidden"
                 >
-                  <h3
-                    className={`text-2xl sm:text-3xl font-bold mb-4 ${
-                      frame.color.includes("gray-900") ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+                  {/* Colored bar at the top */}
+                  <div className={`${frame.barColor} h-2 w-full`}></div>
+                  
+                  <div className="p-10 sm:p-12">
+                    <h3 className="text-2xl sm:text-3xl font-bold mb-5 text-gray-900">
                     {frame.name}
                   </h3>
-                  <p
-                    className={`text-base sm:text-lg leading-relaxed mb-6 ${
-                      frame.color.includes("gray-900")
-                        ? "text-gray-200"
-                        : "text-gray-700"
-                    } font-light`}
-                  >
+                    <p className="text-base sm:text-lg leading-relaxed mb-8 text-gray-700 font-light">
                     {frame.description}
                   </p>
-                  <ul className="space-y-3">
+                    <ul className="space-y-4">
                     {frame.features.map((feature, idx) => (
                       <li
                         key={idx}
-                        className={`text-sm sm:text-base flex items-center ${
-                          frame.color.includes("gray-900")
-                            ? "text-gray-300"
-                            : "text-gray-600"
-                        }`}
+                          className="text-sm sm:text-base flex items-start text-gray-700"
+                        >
+                          <svg
+                            className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-gray-900"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
                       >
-                        <span className="mr-3 text-lg">✓</span>
-                        {feature}
+                            <path
+                              fillRule="evenodd"
+                              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Standard Sizes */}
-          <div className="mb-20 sm:mb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
+          <div className="mb-24 sm:mb-32">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Tamaños Estándar
             </h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto font-light">
+                Formatos disponibles para todas nuestras impresiones
+              </p>
+            </div>
             <div
               ref={sizesRef}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6"
+              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 sm:gap-8 max-w-5xl mx-auto"
             >
               {sizes.map((size, index) => (
                 <div
                   key={index}
-                  className="size-card bg-white rounded-xl p-6 sm:p-8 shadow-lg border border-gray-200 text-center transition-all duration-300 hover:shadow-xl hover:border-gray-900"
+                  className="size-card bg-white rounded-2xl p-6 sm:p-8 shadow-lg border-2 border-gray-200 text-center flex items-center justify-center"
                 >
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                    {size.width}
-                  </div>
-                  <div className="text-gray-600 mb-2">×</div>
-                  <div className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3">
-                    {size.height}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">cm</div>
+                  <span className="text-2xl sm:text-3xl font-bold text-gray-900 whitespace-nowrap inline-block">
+                    {size.width} × {size.height} <span className="text-xs sm:text-sm text-gray-500 font-semibold uppercase tracking-wider ml-1">CM</span>
+                  </span>
                 </div>
               ))}
             </div>
-            <p className="text-center text-gray-600 mt-8 text-base sm:text-lg font-light">
-              Todos los tamaños están disponibles en centímetros
+            <p className="text-center text-gray-600 mt-12 text-base sm:text-lg font-light">
+              Todos los tamaños están disponibles en centímetros. También ofrecemos tamaños personalizados por un precio adicional.
             </p>
           </div>
 
           {/* Media Options */}
-          <div className="mb-20 sm:mb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center">
+          <div className="mb-24 sm:mb-32">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Opciones de Medio
             </h2>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto font-light">
+                Materiales de impresión de calidad profesional para cada proyecto
+              </p>
+            </div>
             <div
               ref={mediaRef}
-              className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8"
+              className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10"
             >
               {mediaOptions.map((option, index) => (
                 <div
                   key={index}
-                  className="media-card bg-white rounded-2xl p-8 sm:p-10 shadow-lg border border-gray-200 transition-all duration-300 hover:shadow-xl hover:border-gray-900"
+                  className="media-card bg-white rounded-3xl p-10 sm:p-12 shadow-xl border-2 border-gray-200 transition-all duration-500 hover:shadow-2xl hover:border-gray-900 hover:scale-[1.02] group"
                 >
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-5">
                     {option.name}
                   </h3>
-                  <p className="text-base sm:text-lg text-gray-600 leading-relaxed font-light mb-6">
+                  <p className="text-base sm:text-lg text-gray-700 leading-relaxed font-light mb-8">
                     {option.description}
                   </p>
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {option.specs.map((spec, idx) => (
                       <li
                         key={idx}
-                        className="text-sm sm:text-base text-gray-600 flex items-center"
+                        className="text-sm sm:text-base text-gray-700 flex items-start"
                       >
-                        <span className="mr-3 text-gray-900 font-bold">•</span>
-                        {spec}
+                        <svg
+                          className="w-5 h-5 mr-3 mt-0.5 flex-shrink-0 text-gray-900"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{spec}</span>
                       </li>
                     ))}
                   </ul>
@@ -314,21 +387,24 @@ export default function FramingPage() {
           </div>
 
           {/* Special Requests */}
-          <div className="bg-white rounded-2xl p-8 sm:p-12 shadow-lg border border-gray-200 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-12 sm:p-16 shadow-2xl text-center text-white">
+            <div className="max-w-3xl mx-auto">
+              <div className="inline-block w-16 h-1 bg-white mb-6"></div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
               Solicitudes Especiales
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 mb-6 font-light max-w-2xl mx-auto">
+              <p className="text-xl sm:text-2xl text-gray-200 mb-10 font-light leading-relaxed">
               ¿Necesitas un tamaño personalizado o tienes una solicitud
               especial? Estamos aquí para ayudarte a crear exactamente lo que
-              imaginas.
+                imaginas. Nuestro equipo está listo para trabajar contigo en proyectos únicos.
             </p>
             <Link
               href="/contact"
-              className="inline-block bg-gray-900 text-white py-4 px-8 rounded-xl font-semibold hover:bg-gray-800 transition-all duration-300 hover:shadow-lg tracking-wide"
+                className="inline-block bg-white text-gray-900 py-5 px-10 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-xl tracking-wide text-lg"
             >
               Contáctanos
             </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -336,4 +412,5 @@ export default function FramingPage() {
     </main>
   );
 }
+
 

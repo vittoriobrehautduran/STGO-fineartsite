@@ -51,6 +51,7 @@ export default function OrderFlow() {
   const [selectedMediaType, setSelectedMediaType] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<Size | null>(null);
   const [selectedFraming, setSelectedFraming] = useState<string | null>(null); // null = "Sin Marco"
+  const [specialRequests, setSpecialRequests] = useState<string>("");
 
   // Customer info
   const [customerEmail, setCustomerEmail] = useState("");
@@ -213,16 +214,23 @@ export default function OrderFlow() {
       const totalAmount = calculateTotal();
 
       // Create order in database
+      const orderDataToInsert: any = {
+        customer_email: customerEmail,
+        customer_name: customerName,
+        customer_phone: customerPhone || null,
+        total_amount: totalAmount,
+        status: "pending",
+        image_url: uploadedImageUrl,
+      };
+
+      // Add special requests if provided (only if the field exists in the database)
+      if (specialRequests.trim()) {
+        orderDataToInsert.special_requests = specialRequests.trim();
+      }
+
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
-        .insert({
-          customer_email: customerEmail,
-          customer_name: customerName,
-          customer_phone: customerPhone || null,
-          total_amount: totalAmount,
-          status: "pending",
-          image_url: uploadedImageUrl,
-        })
+        .insert(orderDataToInsert)
         .select()
         .single();
 
@@ -401,7 +409,7 @@ export default function OrderFlow() {
               ¡Imagen Subida Exitosamente!
             </h2>
             <p className="text-gray-600">
-              Tu imagen ha sido subida a Supabase sin compresión.
+              Tu imagen ha sido subida exitosamente.
             </p>
           </div>
 
@@ -429,27 +437,13 @@ export default function OrderFlow() {
                 {(file?.size ? file.size / 1024 / 1024 : 0).toFixed(2)} MB
               </span>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Ubicación en Supabase:</span>
-              </div>
-              <div className="bg-white p-3 rounded border border-gray-200">
-                <code className="font-mono text-xs text-gray-700 break-all">
-                  customer-uploads/{uploadedImageUrl}
-                </code>
-              </div>
-            </div>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-800">
-              <strong>Para verificar en Supabase:</strong>
+              <strong>Tu imagen está lista:</strong>
               <br />
-              1. Ve a <strong>Storage</strong> → <strong>customer-uploads</strong>
-              <br />
-              2. Busca el archivo: <code className="bg-blue-100 px-1 rounded font-mono text-xs">{uploadedImageUrl}</code>
-              <br />
-              3. La imagen está almacenada <strong>sin compresión</strong>
+              La imagen ha sido guardada correctamente y está lista para continuar con tu pedido.
             </p>
           </div>
 
@@ -583,6 +577,23 @@ export default function OrderFlow() {
             </div>
           </div>
 
+          {/* Special Requests / Other */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Solicitudes Especiales o Notas Adicionales
+            </h3>
+            <textarea
+              value={specialRequests}
+              onChange={(e) => setSpecialRequests(e.target.value)}
+              placeholder="Si tienes alguna solicitud especial, tamaño personalizado, o nota adicional, escríbela aquí..."
+              rows={4}
+              className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-900 focus:border-gray-900 outline-none resize-none transition-all duration-300 hover:border-gray-400 bg-white shadow-sm"
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Opcional: Comparte cualquier detalle adicional sobre tu pedido
+            </p>
+          </div>
+
           {/* Total Preview */}
           <div className="bg-gray-50 rounded-lg p-6">
             <div className="flex justify-between items-center">
@@ -651,6 +662,14 @@ export default function OrderFlow() {
                   : "Sin Marco"}
               </span>
             </div>
+            {specialRequests.trim() && (
+              <div className="border-t border-gray-300 pt-4">
+                <div className="text-gray-600 mb-2">Solicitudes Especiales:</div>
+                <div className="bg-white p-3 rounded border border-gray-200 text-gray-900">
+                  {specialRequests}
+                </div>
+              </div>
+            )}
             <div className="border-t border-gray-300 pt-4 flex justify-between">
               <span className="text-lg font-semibold text-gray-900">Total:</span>
               <span className="text-2xl font-bold text-gray-900">
