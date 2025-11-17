@@ -2,10 +2,37 @@ import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
 import Footer from "@/components/Footer";
 import { getAllProducts } from "@/lib/products";
+import type { Metadata } from "next";
 
 // Force dynamic rendering to always fetch fresh data from Supabase
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: "Colección de Arte | Impresión Fine Art y Enmarcado",
+  description: "Explora nuestra colección completa de obras de arte de alta calidad. Impresión fine art profesional, enmarcado y servicios de instalación. Arte decorativo, fotografía artística y impresión en canvas.",
+  keywords: [
+    "colección arte",
+    "arte decorativo",
+    "impresión fine art",
+    "fotografía artística",
+    "arte para decoración",
+    "impresión profesional",
+    "enmarcado profesional",
+    "arte fino",
+    "fine art",
+    "arts",
+    "imprenta",
+    "impresión",
+    "enramado",
+    "marcos personalizados",
+  ],
+  openGraph: {
+    title: "Colección de Arte | STGO Fine Art",
+    description: "Explora nuestra colección completa de obras de arte de alta calidad. Impresión fine art profesional y enmarcado.",
+    type: "website",
+  },
+};
 
 export default async function CollectionPage() {
   const products = await getAllProducts();

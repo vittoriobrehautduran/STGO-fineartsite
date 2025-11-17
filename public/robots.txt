@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /checkout/success
+
+# Sitemap
+Sitemap: https://stgofineart.netlify.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+

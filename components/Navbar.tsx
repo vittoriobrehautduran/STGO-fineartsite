@@ -277,13 +277,13 @@ export default function Navbar() {
       {isVisible && (
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="fixed top-4 right-4 z-[70] max-[525px]:block hidden p-2 rounded-lg transition-colors duration-200 text-white hover:bg-white/10"
+          className="fixed top-4 right-4 z-[70] max-[525px]:block hidden p-2 rounded-lg transition-colors duration-200"
           style={{
-            color: isHomePage ? 'white' : '#111827',
-            backgroundColor: isHomePage ? 'transparent' : 'transparent',
+            color: isMobileMenuOpen ? 'white' : (isHomePage ? 'white' : '#111827'),
+            backgroundColor: isMobileMenuOpen ? 'transparent' : 'transparent',
           }}
           onMouseEnter={(e) => {
-            if (isHomePage) {
+            if (isMobileMenuOpen || isHomePage) {
               e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             } else {
               e.currentTarget.style.backgroundColor = '#f3f4f6';
@@ -357,7 +357,7 @@ export default function Navbar() {
 
       {/* Mobile Navigation Menu - Only visible on screens < 525px, rendered outside nav to avoid DOM issues */}
       <div
-        className={`max-[525px]:block hidden fixed top-0 left-0 right-0 bg-white shadow-lg transition-transform duration-300 ease-in-out z-[60] ${
+        className={`max-[525px]:block hidden fixed top-0 left-0 right-0 bg-black shadow-lg transition-transform duration-300 ease-in-out z-[60] ${
           isMobileMenuOpen ? "translate-y-0" : "-translate-y-full"
         }`}
         style={{ paddingTop: "80px" }}
@@ -372,13 +372,13 @@ export default function Navbar() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`nav-link relative font-medium text-base py-2 transition-colors duration-200 ${
                   isActive
-                    ? "text-gray-900 font-semibold"
-                    : "text-gray-700 hover:text-gray-900"
+                    ? "text-white font-semibold"
+                    : "text-gray-300 hover:text-white"
                 }`}
               >
                 {link.label}
                 {isActive && (
-                  <span className="nav-underline absolute bottom-0 left-0 h-0.5 bg-gray-900 nav-underline-active" />
+                  <span className="nav-underline absolute bottom-0 left-0 h-0.5 bg-white nav-underline-active" />
                 )}
               </Link>
             );
