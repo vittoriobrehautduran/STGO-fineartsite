@@ -104,8 +104,30 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('Transbank create error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      code: error.code,
+    });
+    
+    // Provide more helpful error messages
+    let errorMessage = error.message || 'Error creating payment';
+    
+    if (error.message?.includes('401') || error.message?.includes('Not Authorized')) {
+      errorMessage = 'Error de autenticación con Transbank. Verifica que las credenciales (commerce code y API key) estén correctamente configuradas en las variables de entorno.';
+    } else if (error.response?.status === 401) {
+      errorMessage = 'Error de autenticación con Transbank. Las credenciales no son válidas.';
+    }
+    
     return NextResponse.json(
-      { error: error.message || 'Error creating payment' },
+      { 
+        error: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? {
+          originalError: error.message,
+          responseData: error.response?.data,
+        } : undefined
+      },
       { status: 500 }
     );
   }
