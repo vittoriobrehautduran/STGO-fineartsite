@@ -163,30 +163,14 @@ function CheckoutSuccessContent() {
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-2xl">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center space-y-6">
-            {paymentStatus === 'failed' ? (
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-                <svg
-                  className="w-8 h-8 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-            ) : paymentStatus === 'processing' ? (
+            {paymentStatus === 'processing' ? (
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : (
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
                 <svg
-                  className="w-8 h-8 text-green-600"
+                  className="w-8 h-8 text-gray-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -201,16 +185,12 @@ function CheckoutSuccessContent() {
               </div>
             )}
             <h1 className="text-3xl font-bold text-gray-900">
-              {paymentStatus === 'failed' ? 'Pago Fallido' : 
-               paymentStatus === 'processing' ? 'Procesando Pago...' :
-               '¡Pago Exitoso!'}
+              {paymentStatus === 'processing' ? 'Procesando...' : 'Tu pago ha sido procesado'}
             </h1>
             <p className="text-gray-600">
-              {paymentStatus === 'failed' 
-                ? 'Hubo un problema al procesar tu pago. Por favor, intenta de nuevo.'
-                : paymentStatus === 'processing'
+              {paymentStatus === 'processing'
                 ? 'Estamos verificando tu pago...'
-                : 'Tu pedido ha sido recibido y está siendo procesado.'}
+                : 'Tu pedido ha sido recibido y está siendo procesado. Te contactaremos pronto con los detalles.'}
             </p>
             {order && (
               <div className="bg-gray-50 rounded-lg p-6 text-left space-y-2">
@@ -226,19 +206,20 @@ function CheckoutSuccessContent() {
                     {formatCurrency(order.total_amount)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Estado:</span>
-                  <span className={`font-semibold ${
-                    order.status === "paid" ? "text-green-600" :
-                    order.status === "payment_failed" ? "text-red-600" :
-                    "text-blue-600"
-                  }`}>
-                    {order.status === "paid" ? "Pagado" : 
-                     order.status === "payment_failed" ? "Pago Fallido" :
-                     order.status === "pending_payment" ? "Pendiente de Pago" :
-                     order.status}
-                  </span>
-                </div>
+                {order.status !== "pending" && order.status !== "pending_payment" && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Estado:</span>
+                    <span className={`font-semibold ${
+                      order.status === "paid" ? "text-green-600" :
+                      order.status === "payment_failed" ? "text-red-600" :
+                      "text-gray-600"
+                    }`}>
+                      {order.status === "paid" ? "Completado" : 
+                       order.status === "payment_failed" ? "Procesando" :
+                       "Procesando"}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             <p className="text-sm text-gray-500">
