@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/currency";
 
 interface Product {
   id: string;
@@ -146,7 +147,7 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      ${product.base_price}
+                      {formatCurrency(product.base_price)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
 
 interface Order {
   id: string;
@@ -162,7 +163,7 @@ export default function OrdersPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      ${order.total_amount}
+                      {formatCurrency(order.total_amount)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

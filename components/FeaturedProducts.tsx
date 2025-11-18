@@ -7,6 +7,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Product } from "@/types/product";
 import { getFeaturedProducts } from "@/lib/products";
+import { formatCurrency } from "@/lib/currency";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -165,7 +166,7 @@ export default function FeaturedProducts() {
                   <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors tracking-tight">
                     {product.name}
                   </h3>
-                  <p className="text-gray-600 font-medium">Desde ${product.price}</p>
+                  <p className="text-gray-600 font-medium">Desde {formatCurrency(product.price)}</p>
                 </Link>
               ))}
             </div>

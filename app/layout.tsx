@@ -94,32 +94,14 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/favicon.ico", sizes: "any" },
       { url: "/favicons/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
-      { url: "/favicons/android-chrome-384x384.png", sizes: "384x384", type: "image/png" },
-      { url: "/favicons/android-chrome-256x256.png", sizes: "256x256", type: "image/png" },
       { url: "/favicons/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicons/favicon-48x48.png", sizes: "48x48", type: "image/png" },
       { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
     ],
     apple: [
-      { url: "/favicons/apple-touch-icon-57x57.webp", sizes: "57x57", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-60x60.webp", sizes: "60x60", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-72x72.webp", sizes: "72x72", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-76x76.webp", sizes: "76x76", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-114x114.webp", sizes: "114x114", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-120x120.webp", sizes: "120x120", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-144x144.webp", sizes: "144x144", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-152x152.webp", sizes: "152x152", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-167x167.webp", sizes: "167x167", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-180x180.webp", sizes: "180x180", type: "image/webp" },
-      { url: "/favicons/apple-touch-icon-1024x1024.webp", sizes: "1024x1024", type: "image/webp" },
-    ],
-    other: [
-      {
-        rel: "apple-touch-icon-precomposed",
-        url: "/favicons/apple-touch-icon-precomposed.webp",
-      },
+      { url: "/favicons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/favicons/manifest.webmanifest",
@@ -165,7 +147,7 @@ export default function RootLayout({
     "description": "Servicios profesionales de impresión fine art, enmarcado y fotografía artística de alta resolución",
     "url": siteUrl,
     "telephone": "",
-    "priceRange": "$$",
+    "priceRange": "CLP",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "CL"

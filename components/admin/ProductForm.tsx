@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/currency";
 
 interface ProductFormProps {
   product?: any;
@@ -408,7 +409,7 @@ export default function ProductForm({
                   {option.name}
                 </span>
                 <p className="text-xs text-gray-500">{option.description}</p>
-                <p className="text-xs text-gray-600">${option.price}</p>
+                <p className="text-xs text-gray-600">{formatCurrency(option.price)}</p>
               </div>
             </label>
           ))}

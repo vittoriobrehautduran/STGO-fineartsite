@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/currency";
 
 interface MediaType {
   id: string;
@@ -535,7 +536,7 @@ export default function OrderFlow() {
                   </div>
                   <div className="text-xs text-gray-500 mt-1">{size.unit}</div>
                   <div className="text-sm font-medium text-gray-700 mt-2">
-                    ${size.basePrice}
+                    {formatCurrency(size.basePrice)}
                   </div>
                 </button>
               ))}
@@ -558,7 +559,7 @@ export default function OrderFlow() {
               >
                 <div className="font-semibold text-gray-900">Sin Marco</div>
                 <div className="text-sm text-gray-600 mt-1">Solo impresión</div>
-                <div className="text-sm font-medium text-gray-700 mt-2">$0</div>
+                <div className="text-sm font-medium text-gray-700 mt-2">{formatCurrency(0)}</div>
               </button>
               {framingOptions
                 .filter((f) => f.name !== "Sin Marco")
@@ -579,7 +580,7 @@ export default function OrderFlow() {
                       {framing.description}
                     </div>
                     <div className="text-sm font-medium text-gray-700 mt-2">
-                      +${framing.price}
+                      +{formatCurrency(framing.price)}
                     </div>
                   </button>
                 ))}
@@ -608,7 +609,7 @@ export default function OrderFlow() {
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold text-gray-900">Total:</span>
               <span className="text-2xl font-bold text-gray-900">
-                ${calculateTotal()}
+                {formatCurrency(calculateTotal())}
               </span>
             </div>
           </div>
@@ -682,7 +683,7 @@ export default function OrderFlow() {
             <div className="border-t border-gray-300 pt-4 flex justify-between">
               <span className="text-lg font-semibold text-gray-900">Total:</span>
               <span className="text-2xl font-bold text-gray-900">
-                ${calculateTotal()}
+                {formatCurrency(calculateTotal())}
               </span>
             </div>
           </div>

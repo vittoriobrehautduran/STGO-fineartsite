@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
+import { formatCurrency } from "@/lib/currency";
 
 interface ProductCardProps {
   product: Product;
@@ -129,7 +130,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               </p>
               <div>
                 <p className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
-                  Desde ${product.price}
+                  Desde {formatCurrency(product.price)}
                 </p>
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -212,7 +213,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                       <option value="">Elegir tamaño</option>
                       {product.sizes.map((size) => (
                         <option key={size.id} value={size.id}>
-                          {size.width} cm × {size.height} cm - ${size.price}
+                          {size.width} cm × {size.height} cm - {formatCurrency(size.price)}
                         </option>
                       ))}
                     </select>
@@ -268,7 +269,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                             </div>
                             {option.price > 0 && (
                               <div className="text-sm font-medium text-gray-900 mt-1">
-                                +${option.price}
+                                +{formatCurrency(option.price)}
                               </div>
                             )}
                           </div>
@@ -283,7 +284,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                         Total:
                       </span>
                       <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        ${totalPrice}
+                        {formatCurrency(totalPrice)}
                       </span>
                     </div>
                     <button

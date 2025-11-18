@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
@@ -196,7 +197,7 @@ export default function CartPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-bold text-gray-900">
-                          ${item.totalPrice}
+                          {formatCurrency(item.totalPrice)}
                         </p>
                       </div>
                     </div>
@@ -300,7 +301,7 @@ export default function CartPage() {
                       Total:
                     </span>
                     <span className="text-2xl font-bold text-gray-900">
-                      ${getTotalPrice()}
+                      {formatCurrency(getTotalPrice())}
                     </span>
                   </div>
                 </div>

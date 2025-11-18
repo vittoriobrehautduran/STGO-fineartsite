@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -206,7 +207,7 @@ function CheckoutContent() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Total:</span>
                   <span className="font-semibold text-gray-900">
-                    ${order.total_amount}
+                    {formatCurrency(order.total_amount)}
                   </span>
                 </div>
                 <div className="flex justify-between">

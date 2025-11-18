@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/currency";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -166,7 +167,7 @@ export default function AdminDashboard() {
                 Ingresos Totales
               </p>
               <p className="text-3xl font-bold text-gray-900 mt-2">
-                ${stats.totalRevenue.toLocaleString()}
+                {formatCurrency(stats.totalRevenue)}
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">

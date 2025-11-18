@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
+import { formatCurrency } from "@/lib/currency";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -193,7 +194,7 @@ export default function OrderDetailPage() {
               <div className="flex justify-between">
                 <span className="text-gray-600">Total:</span>
                 <span className="font-semibold text-gray-900">
-                  ${order.total_amount}
+                  {formatCurrency(order.total_amount)}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -251,7 +252,7 @@ export default function OrderDetailPage() {
                 <div>
                   <span className="text-gray-600">Precio del Item:</span>
                   <p className="font-medium text-gray-900">
-                    ${orderItem.item_price}
+                    {formatCurrency(orderItem.item_price)}
                   </p>
                 </div>
               </div>
