@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order with Transbank transaction info
-    await supabase
+    const { error: updateError, data: updateData } = await supabase
       .from('orders')
       .update({
         transbank_token: token,
@@ -125,7 +125,20 @@ export async function POST(request: NextRequest) {
         transbank_session_id: sessionId,
         status: 'pending_payment',
       })
-      .eq('id', orderId);
+      .eq('id', orderId)
+      .select();
+
+    if (updateError) {
+      console.error('Error updating order with Transbank info:', updateError);
+      // Don't fail the request, but log the error
+    } else {
+      console.log('Order updated successfully with Transbank info:', {
+        orderId: orderId.substring(0, 8) + '...',
+        buyOrder,
+        tokenSet: !!token,
+        rowsUpdated: updateData?.length || 0,
+      });
+    }
 
     return NextResponse.json({
       token: token,

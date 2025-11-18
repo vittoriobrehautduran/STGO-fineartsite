@@ -78,10 +78,21 @@ export async function POST(request: NextRequest) {
         .eq('id', order_id)
         .single();
       
+      if (idError) {
+        console.error('Error finding order by order_id:', idError);
+      }
+      
       if (orderById && !idError) {
         orderData = orderById;
         orderId = orderById.id;
-        console.log('Order found by order_id');
+        console.log('Order found by order_id:', {
+          orderId: orderId.substring(0, 8) + '...',
+          hasBuyOrder: !!orderById.transbank_buy_order,
+          hasToken: !!orderById.transbank_token,
+          status: orderById.status,
+        });
+      } else {
+        console.log('Order not found by order_id, will try other methods');
       }
     }
     
@@ -118,17 +129,36 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // If still not found, return error
+    // If still not found, return error with more details
     if (!orderData || !orderId) {
+      // Try one more time with full order_id (not truncated) to see if it exists
+      let fullOrderCheck = null;
+      if (order_id) {
+        const { data: fullOrder } = await supabase
+          .from('orders')
+          .select('id, status, transbank_token, transbank_buy_order')
+          .eq('id', order_id)
+          .maybeSingle();
+        fullOrderCheck = fullOrder;
+      }
+      
       console.error('Order not found by any method', {
         orderIdProvided: order_id ? order_id.substring(0, 8) + '...' : null,
+        orderIdFull: order_id,
         buyOrderSearched: buyOrder || null,
         hasToken: !!token_ws,
+        tokenPrefix: token_ws ? token_ws.substring(0, 20) + '...' : null,
+        fullOrderCheck: fullOrderCheck ? {
+          found: true,
+          hasToken: !!fullOrderCheck.transbank_token,
+          hasBuyOrder: !!fullOrderCheck.transbank_buy_order,
+          status: fullOrderCheck.status,
+        } : { found: false },
       });
       
       return NextResponse.json(
         { 
-          error: 'Order not found for this transaction', 
+          error: 'Order not found for this transaction. The order may not have been saved correctly during payment creation.', 
           success: false,
         },
         { status: 404 }
