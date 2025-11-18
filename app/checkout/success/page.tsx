@@ -87,14 +87,28 @@ function CheckoutSuccessContent() {
           });
 
           if (!commitResponse.ok) {
-            const errorData = await commitResponse.json();
-            console.error('Commit API error:', errorData);
+            let errorData;
+            try {
+              errorData = await commitResponse.json();
+            } catch (e) {
+              // If response is not JSON, create error object
+              errorData = { 
+                error: commitResponse.status === 404 
+                  ? 'El endpoint de pago no está disponible. Por favor, contacta con soporte.'
+                  : `Error del servidor (${commitResponse.status})`
+              };
+            }
             
-            // Check if it's a timeout/session expired error
-            const isTimeoutError = errorData.error?.includes('not found') || 
-                                   errorData.error?.includes('expired') ||
-                                   errorData.error?.includes('invalid token') ||
-                                   errorData.debug?.buyOrderSearched;
+            console.error('Commit API error:', {
+              status: commitResponse.status,
+              statusText: commitResponse.statusText,
+              error: errorData
+            });
+            
+            // Check if it's a 404 (route not found) - this is a deployment issue
+            if (commitResponse.status === 404) {
+              console.error('CRITICAL: /api/transbank/commit endpoint not found. This is a deployment issue.');
+            }
             
             setPaymentStatus('failed');
             // Still try to fetch order to show details

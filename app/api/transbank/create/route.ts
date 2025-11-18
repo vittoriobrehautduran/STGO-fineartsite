@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
 import { supabase } from '@/lib/supabase';
-import '@/lib/env-validation'; // Validate environment variables on import
 
 export async function POST(request: NextRequest) {
   try {

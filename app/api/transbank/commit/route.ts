@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient } from '@/lib/transbank';
 import { supabase } from '@/lib/supabase';
-import '@/lib/env-validation'; // Validate environment variables on import
 
 export async function POST(request: NextRequest) {
   try {
@@ -170,6 +169,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order status based on payment result
+    // In Transbank, response_code === 0 means approved, any other value means rejected/failed
     const isApproved = response.response_code === 0;
     const orderStatus = isApproved ? 'paid' : 'payment_failed';
     
@@ -177,8 +177,20 @@ export async function POST(request: NextRequest) {
     console.log('Payment result:', { 
       isApproved, 
       response_code: response.response_code, 
-      status: response.status 
+      status: response.status,
+      buy_order: response.buy_order,
+      // Log full response in development to debug test payments
+      ...(process.env.NODE_ENV === 'development' && { fullResponse: response })
     });
+    
+    // If payment was rejected, log why (for debugging test payments)
+    if (!isApproved) {
+      console.warn('Payment rejected by Transbank:', {
+        response_code: response.response_code,
+        status: response.status,
+        // Common response codes: 0 = approved, -1 = rejected, others = various errors
+      });
+    }
     
     const updateData: any = {
       status: orderStatus,
