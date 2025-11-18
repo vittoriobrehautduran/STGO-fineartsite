@@ -176,6 +176,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Verify the update was actually saved by reading it back
+    const { data: verifyData, error: verifyError } = await supabase
+      .from('orders')
+      .select('id, transbank_token, transbank_buy_order, status')
+      .eq('id', orderId)
+      .single();
+
+    if (verifyError || !verifyData) {
+      console.error('CRITICAL: Could not verify order update:', {
+        error: verifyError,
+        orderId: orderId.substring(0, 8) + '...',
+      });
+      // Still return success to allow payment flow, but log the critical error
+    } else if (!verifyData.transbank_token || !verifyData.transbank_buy_order) {
+      console.error('CRITICAL: Order update verification failed - fields not saved:', {
+        orderId: orderId.substring(0, 8) + '...',
+        hasToken: !!verifyData.transbank_token,
+        hasBuyOrder: !!verifyData.transbank_buy_order,
+        status: verifyData.status,
+      });
+      // Still return success to allow payment flow, but log the critical error
+    } else {
+      console.log('Order update verified successfully:', {
+        orderId: orderId.substring(0, 8) + '...',
+        buyOrder: verifyData.transbank_buy_order,
+        tokenPrefix: verifyData.transbank_token.substring(0, 10) + '...',
+      });
+    }
+
     return NextResponse.json({
       token: token,
       url: url,
