@@ -24,13 +24,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract order ID from buy_order (format: ORD-{shortId}-{timestamp})
+    // Find order by buy_order since we use a shortened buyOrder format
     const buyOrder = response.buy_order || '';
-    const orderIdMatch = buyOrder.match(/ORD-([^-]+)/);
-    // Since we use a short ID, we need to find the order by transbank_buy_order instead
-    const orderId = orderIdMatch ? orderIdMatch[1] : null;
-
-    // Find order by buy_order since we can't reliably extract full order ID
+    
     const { data: orderData, error: orderFindError } = await supabase
       .from('orders')
       .select('id')
