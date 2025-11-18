@@ -18,7 +18,30 @@ function CheckoutSuccessContent() {
 
   useEffect(() => {
     async function verifyPayment() {
-      if (!orderId) {
+      // If we have token_ws but no orderId, try to find order by token first
+      if (tokenWs && !orderId) {
+        try {
+          const { data: orderByToken } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("transbank_token", tokenWs)
+            .single();
+          
+          if (orderByToken) {
+            // Use the found order ID
+            const url = new URL(window.location.href);
+            url.searchParams.set('order_id', orderByToken.id);
+            window.history.replaceState({}, '', url.toString());
+            // Continue with the found orderId
+          }
+        } catch (err) {
+          console.error("Error finding order by token:", err);
+        }
+      }
+
+      const currentOrderId = orderId || new URLSearchParams(window.location.search).get('order_id');
+      
+      if (!currentOrderId && !tokenWs) {
         setLoading(false);
         return;
       }
@@ -38,40 +61,73 @@ function CheckoutSuccessContent() {
             }),
           });
 
-          const commitData = await commitResponse.json();
-          
-          if (commitData.success) {
-            setPaymentStatus('success');
-            // Update orderId if we got a new one from the commit
-            if (commitData.orderId) {
-              // Fetch updated order
-              const { data: orderData } = await supabase
-                .from("orders")
-                .select("*")
-                .eq("id", commitData.orderId)
-                .single();
-              
-              if (orderData) {
-                setOrder(orderData);
+          if (!commitResponse.ok) {
+            const errorData = await commitResponse.json();
+            console.error('Commit API error:', errorData);
+            setPaymentStatus('failed');
+            // Still try to fetch order to show details
+          } else {
+            const commitData = await commitResponse.json();
+            console.log('Commit response:', commitData);
+            
+            if (commitData.success) {
+              setPaymentStatus('success');
+              // Update orderId if we got a new one from the commit
+              if (commitData.orderId) {
+                // Fetch updated order
+                const { data: orderData } = await supabase
+                  .from("orders")
+                  .select("*")
+                  .eq("id", commitData.orderId)
+                  .single();
+                
+                if (orderData) {
+                  setOrder(orderData);
+                }
+              }
+            } else {
+              setPaymentStatus('failed');
+              // Fetch order to show details even if payment failed
+              if (commitData.orderId) {
+                const { data: orderData } = await supabase
+                  .from("orders")
+                  .select("*")
+                  .eq("id", commitData.orderId)
+                  .single();
+                
+                if (orderData) {
+                  setOrder(orderData);
+                }
               }
             }
-          } else {
-            setPaymentStatus('failed');
           }
         }
 
-        // Fetch order details
-        const { data: orderData, error: orderError } = await supabase
-          .from("orders")
-          .select("*")
-          .eq("id", orderId)
-          .single();
+        // Fetch order details if we have an orderId
+        if (currentOrderId) {
+          const { data: orderData, error: orderError } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("id", currentOrderId)
+            .single();
 
-        if (orderError) throw orderError;
-
-        // Set order data
-        if (!order) {
-          setOrder(orderData);
+          if (orderError) {
+            console.error("Error fetching order:", orderError);
+            // Don't throw, just continue
+          } else if (orderData) {
+            // Set order data if we don't already have it
+            if (!order) {
+              setOrder(orderData);
+            }
+            // If payment status wasn't set yet, check order status
+            if (!paymentStatus) {
+              if (orderData.status === 'paid') {
+                setPaymentStatus('success');
+              } else if (orderData.status === 'payment_failed') {
+                setPaymentStatus('failed');
+              }
+            }
+          }
         }
       } catch (err: any) {
         console.error("Error verifying payment:", err);
@@ -105,21 +161,43 @@ function CheckoutSuccessContent() {
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-2xl">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center space-y-6">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
+            {paymentStatus === 'failed' ? (
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
+                <svg
+                  className="w-8 h-8 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </div>
+            ) : paymentStatus === 'processing' ? (
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                <svg
+                  className="w-8 h-8 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            )}
             <h1 className="text-3xl font-bold text-gray-900">
               {paymentStatus === 'failed' ? 'Pago Fallido' : 
                paymentStatus === 'processing' ? 'Procesando Pago...' :
@@ -148,8 +226,15 @@ function CheckoutSuccessContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Estado:</span>
-                  <span className="font-semibold text-green-600">
-                    {order.status === "paid" ? "Pagado" : order.status}
+                  <span className={`font-semibold ${
+                    order.status === "paid" ? "text-green-600" :
+                    order.status === "payment_failed" ? "text-red-600" :
+                    "text-blue-600"
+                  }`}>
+                    {order.status === "paid" ? "Pagado" : 
+                     order.status === "payment_failed" ? "Pago Fallido" :
+                     order.status === "pending_payment" ? "Pendiente de Pago" :
+                     order.status}
                   </span>
                 </div>
               </div>
