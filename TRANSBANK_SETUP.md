@@ -36,6 +36,7 @@ En el entorno de integración, puedes usar estas tarjetas de prueba:
 - **Fecha de Expiración**: Cualquier fecha futura (ej: `12/25`)
 - **RUT**: `12345678-9` (o cualquier RUT válido)
 - **Resultado**: Transacción aprobada
+- **Tipo**: VN (Venta Normal/Crédito)
 
 ### Tarjeta Rechazada (Crédito)
 - **Número**: `4051885600446623` (mismo número, pero el sistema puede rechazarla según configuración)
@@ -48,6 +49,28 @@ En el entorno de integración, puedes usar estas tarjetas de prueba:
 - Puedes usar tarjetas de **crédito de prueba** sin problema
 - Las tarjetas de prueba funcionan tanto para crédito como débito en el entorno de integración
 - **NO uses tarjetas reales** en el entorno de integración
+
+## Problemas Conocidos y Soluciones
+
+### cURL Error 52: Empty reply from server
+**Problema**: El servidor de Transbank no responde a tiempo durante el commit.
+
+**Solución Implementada**:
+- Timeout de 30 segundos en las llamadas a Transbank
+- Manejo mejorado de errores de timeout
+- Detección de respuestas vacías
+
+### Tipo de Pago (Débito/Prepago vs Crédito)
+**Problema**: Las pruebas de Transbank esperan que las tarjetas de débito/prepago devuelvan `VD` o `VP`, pero devuelven `VN` (crédito).
+
+**Nota**: Esto es normal en el entorno de integración. Transbank clasifica automáticamente las tarjetas según su tipo. En producción, las tarjetas reales de débito/prepago devolverán el código correcto (`VD` o `VP`).
+
+**No requiere acción**: El código ya maneja correctamente todos los tipos de pago (`VN`, `VD`, `VP`).
+
+### Anulaciones (Opcional)
+**Problema**: Las pruebas de anulación requieren endpoints específicos que aún no están implementados.
+
+**Estado**: Las anulaciones son opcionales según las pruebas de Transbank. Se pueden implementar más adelante si es necesario.
 
 ## API Routes Created
 

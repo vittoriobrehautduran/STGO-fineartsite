@@ -74,12 +74,18 @@ export async function POST(request: NextRequest) {
     // Convert to integer if it's a decimal
     const amountInCents = Math.round(amount);
     
-    const response = await transaction.create(
+    // Add timeout wrapper for the create call
+    const createPromise = transaction.create(
       buyOrder,
       sessionId,
       amountInCents,
       returnUrls.returnUrl
     );
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout: Transbank no respondió en 30 segundos')), 30000);
+    });
+    
+    const response = await Promise.race([createPromise, timeoutPromise]) as any;
 
     // Log response without exposing full token
     const safeResponse = {

@@ -22,26 +22,57 @@ export async function POST(request: NextRequest) {
     let response;
     
     try {
-      response = await transaction.commit(token_ws);
+      // Add timeout wrapper for the commit call
+      // Transbank can sometimes take a while to respond, especially in integration
+      const commitPromise = transaction.commit(token_ws);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: Transbank no respondió en 30 segundos')), 30000);
+      });
+      
+      response = await Promise.race([commitPromise, timeoutPromise]) as any;
     } catch (error: any) {
-      console.error('Transbank commit error:', error);
+      console.error('Transbank commit error:', {
+        error: error.message || error.toString(),
+        code: error.code,
+        name: error.name,
+        stack: error.stack?.substring(0, 200),
+      });
       
       // Check for specific timeout/session expired errors
       const errorMessage = error.message || error.toString() || '';
+      const isTimeout = errorMessage.includes('timeout') || 
+                       errorMessage.includes('Timeout') ||
+                       errorMessage.includes('Empty reply') ||
+                       errorMessage.includes('ECONNRESET') ||
+                       errorMessage.includes('ETIMEDOUT');
       const isSessionExpired = errorMessage.includes('expired') || 
                               errorMessage.includes('not found') ||
-                              errorMessage.includes('invalid') ||
-                              errorMessage.includes('timeout');
+                              errorMessage.includes('invalid');
       
       return NextResponse.json(
         { 
-          error: isSessionExpired 
+          error: isTimeout
+            ? 'El servidor de Transbank no respondió a tiempo. Por favor, intenta realizar el pago nuevamente.'
+            : isSessionExpired 
             ? 'La sesión de pago ha expirado. Por favor, intenta realizar el pago nuevamente.'
             : 'Error al procesar el pago',
           success: false,
-          isTimeout: isSessionExpired,
+          isTimeout: isTimeout || isSessionExpired,
+          errorCode: error.code,
         },
-        { status: 400 }
+        { status: isTimeout ? 504 : 400 }
+      );
+    }
+
+    // Check if response is empty or invalid
+    if (!response || typeof response !== 'object') {
+      console.error('Invalid or empty response from Transbank commit:', {
+        responseType: typeof response,
+        responseValue: response,
+      });
+      return NextResponse.json(
+        { error: 'No se recibió respuesta válida de Transbank. La sesión puede haber expirado.', success: false, isTimeout: true },
+        { status: 500 }
       );
     }
 
@@ -52,17 +83,10 @@ export async function POST(request: NextRequest) {
       buy_order: response.buy_order,
       amount: response.amount,
       transaction_date: response.transaction_date,
+      payment_type_code: response.payment_type_code, // VD = débito, VP = prepago, VN = crédito
       // Don't log authorization_code or other sensitive fields in production
     };
     console.log('Transbank commit response:', JSON.stringify(safeResponse, null, 2));
-
-    if (!response) {
-      console.error('No response from Transbank commit');
-      return NextResponse.json(
-        { error: 'No se recibió respuesta de Transbank. La sesión puede haber expirado.', success: false, isTimeout: true },
-        { status: 500 }
-      );
-    }
 
     // Find order - prioritize order_id if provided, then token, then buy_order
     const buyOrder = response.buy_order || '';
