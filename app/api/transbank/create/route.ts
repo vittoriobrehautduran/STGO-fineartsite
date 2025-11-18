@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
 import { supabase } from '@/lib/supabase';
+import '@/lib/env-validation'; // Validate environment variables on import
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify order exists
+    // Verify order exists and validate amount matches
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*')
@@ -24,6 +25,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
+      );
+    }
+
+    // Validate that the amount matches the order total
+    // Allow small rounding differences (1 CLP) due to integer conversion
+    const amountDifference = Math.abs(amount - order.total_amount);
+    if (amountDifference > 1) {
+      console.error('Amount mismatch in create request', {
+        requestedAmount: amount,
+        orderAmount: order.total_amount,
+        difference: amountDifference,
+      });
+      
+      return NextResponse.json(
+        { error: 'El monto no coincide con el pedido' },
+        { status: 400 }
+      );
+    }
+
+    // Prevent creating new transaction if order is already paid
+    if (order.status === 'paid') {
+      return NextResponse.json(
+        { error: 'Este pedido ya ha sido pagado' },
+        { status: 400 }
       );
     }
 
@@ -39,11 +64,11 @@ export async function POST(request: NextRequest) {
     const buyOrder = `ORD-${shortId}-${timestamp}`.substring(0, 26);
     const sessionId = orderId.substring(0, 61); // Max 61 characters
     
+    // Log transaction creation without sensitive data
     console.log('Creating Transbank transaction:', {
       buyOrder,
-      sessionId,
       amount,
-      returnUrl: returnUrls.returnUrl,
+      orderId: orderId.substring(0, 8) + '...',
     });
     
     // Transbank expects amount as integer (in cents/CLP)
@@ -57,9 +82,14 @@ export async function POST(request: NextRequest) {
       returnUrls.returnUrl
     );
 
-    console.log('Transbank response:', JSON.stringify(response, null, 2));
-    console.log('Response type:', typeof response);
-    console.log('Response keys:', Object.keys(response || {}));
+    // Log response without exposing full token
+    const safeResponse = {
+      token: response.token ? response.token.substring(0, 10) + '...' : null,
+      url: response.url ? '***' : null,
+      hasToken: !!response.token,
+      hasUrl: !!response.url,
+    };
+    console.log('Transbank response received:', safeResponse);
 
     if (!response) {
       return NextResponse.json(

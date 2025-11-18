@@ -26,6 +26,29 @@ NEXT_PUBLIC_SITE_URL=https://stgofineart.netlify.app
 - **Integration Environment**: Used automatically in development
 - **Production Environment**: Used automatically when deployed to production
 
+## Test Payment Cards (Integration Environment)
+
+En el entorno de integración, puedes usar estas tarjetas de prueba:
+
+### Tarjeta Aprobada (Crédito)
+- **Número**: `4051885600446623`
+- **CVV**: `123`
+- **Fecha de Expiración**: Cualquier fecha futura (ej: `12/25`)
+- **RUT**: `12345678-9` (o cualquier RUT válido)
+- **Resultado**: Transacción aprobada
+
+### Tarjeta Rechazada (Crédito)
+- **Número**: `4051885600446623` (mismo número, pero el sistema puede rechazarla según configuración)
+- **CVV**: `123`
+- **Fecha de Expiración**: Cualquier fecha futura
+- **Resultado**: Transacción rechazada
+
+### Nota Importante
+- En la página de Transbank, selecciona la opción **"Tarjetas"** (que incluye Crédito, Débito y Prepago)
+- Puedes usar tarjetas de **crédito de prueba** sin problema
+- Las tarjetas de prueba funcionan tanto para crédito como débito en el entorno de integración
+- **NO uses tarjetas reales** en el entorno de integración
+
 ## API Routes Created
 
 1. `/api/transbank/create` - Creates a new Transbank transaction

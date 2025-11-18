@@ -5,15 +5,26 @@ import { WebpayPlus, Options, Environment } from 'transbank-sdk';
 // Set TRANSBANK_ENV=integration for testing, or leave unset for production
 const isExplicitIntegration = process.env.TRANSBANK_ENV === 'integration';
 const isExplicitProduction = process.env.TRANSBANK_ENV === 'production';
+
+// Test credentials (default integration key)
+const DEFAULT_TEST_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C';
+const DEFAULT_TEST_COMMERCE_CODE = '597055555532';
+
 const isTestCredentials = !process.env.TRANSBANK_API_KEY || 
-                          process.env.TRANSBANK_API_KEY === '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C';
+                          process.env.TRANSBANK_API_KEY === DEFAULT_TEST_API_KEY;
 
 // Use Integration if explicitly set, or if using test credentials, or if not in production
 const useIntegration = isExplicitIntegration || 
                        (!isExplicitProduction && (isTestCredentials || process.env.NODE_ENV !== 'production'));
 
-export const TRANSBANK_COMMERCE_CODE = process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || '597055555532';
-export const TRANSBANK_API_KEY = process.env.TRANSBANK_API_KEY || '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C';
+// Get values with fallbacks only for development/integration
+// In production, these should be set via environment variables
+export const TRANSBANK_COMMERCE_CODE = process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 
+  (process.env.NODE_ENV === 'production' ? undefined : DEFAULT_TEST_COMMERCE_CODE);
+
+export const TRANSBANK_API_KEY = process.env.TRANSBANK_API_KEY || 
+  (process.env.NODE_ENV === 'production' ? undefined : DEFAULT_TEST_API_KEY);
+
 export const TRANSBANK_BASE_URL = process.env.TRANSBANK_BASE_URL || 'https://webpay3gint.transbank.cl';
 export const TRANSBANK_ENVIRONMENT = useIntegration 
   ? Environment.Integration 
@@ -21,18 +32,20 @@ export const TRANSBANK_ENVIRONMENT = useIntegration
 
 // Initialize Transbank Webpay Plus
 export function getTransbankClient() {
+  // Validate required configuration
+  if (!TRANSBANK_COMMERCE_CODE || !TRANSBANK_API_KEY) {
+    throw new Error('Transbank configuration is missing. Please set NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE and TRANSBANK_API_KEY environment variables.');
+  }
+
+  // Log configuration without exposing full API key
+  const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
   console.log('Transbank Configuration:', {
     commerceCode: TRANSBANK_COMMERCE_CODE,
     apiKeySet: !!TRANSBANK_API_KEY,
-    apiKeyLength: TRANSBANK_API_KEY?.length || 0,
-    apiKeyPrefix: TRANSBANK_API_KEY?.substring(0, 10) + '...',
+    apiKeyPrefix,
     environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
     useIntegration,
-    isExplicitIntegration,
-    isExplicitProduction,
-    isTestCredentials,
     nodeEnv: process.env.NODE_ENV,
-    transbankEnv: process.env.TRANSBANK_ENV,
   });
   
   const options = new Options(

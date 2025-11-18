@@ -48,6 +48,29 @@ function CheckoutSuccessContent() {
       }
 
       try {
+        // Check for timeout: if order was created more than 5 minutes ago, session likely expired
+        let orderCreatedAt: Date | null = null;
+        if (currentOrderId) {
+          const { data: orderData } = await supabase
+            .from("orders")
+            .select("created_at, status")
+            .eq("id", currentOrderId)
+            .single();
+          
+          if (orderData) {
+            orderCreatedAt = new Date(orderData.created_at);
+            const minutesSinceCreation = (Date.now() - orderCreatedAt.getTime()) / (1000 * 60);
+            
+            // If order is older than 5 minutes and still in pending_payment, session likely expired
+            if (minutesSinceCreation > 5 && orderData.status === 'pending_payment') {
+              setPaymentStatus('failed');
+              setOrder(orderData as any);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
         // If we have a token_ws, commit the transaction first
         if (tokenWs) {
           setPaymentStatus('processing');
@@ -66,6 +89,13 @@ function CheckoutSuccessContent() {
           if (!commitResponse.ok) {
             const errorData = await commitResponse.json();
             console.error('Commit API error:', errorData);
+            
+            // Check if it's a timeout/session expired error
+            const isTimeoutError = errorData.error?.includes('not found') || 
+                                   errorData.error?.includes('expired') ||
+                                   errorData.error?.includes('invalid token') ||
+                                   errorData.debug?.buyOrderSearched;
+            
             setPaymentStatus('failed');
             // Still try to fetch order to show details
           } else {
@@ -185,11 +215,17 @@ function CheckoutSuccessContent() {
               </div>
             )}
             <h1 className="text-3xl font-bold text-gray-900">
-              {paymentStatus === 'processing' ? 'Procesando...' : 'Tu pago ha sido procesado'}
+              {paymentStatus === 'processing' 
+                ? 'Procesando...' 
+                : paymentStatus === 'failed'
+                ? 'Tu pago no ha sido procesado'
+                : 'Tu pago ha sido procesado'}
             </h1>
             <p className="text-gray-600">
               {paymentStatus === 'processing'
                 ? 'Estamos verificando tu pago...'
+                : paymentStatus === 'failed'
+                ? 'La sesión de pago ha expirado o el pago no pudo ser procesado. Por favor, intenta realizar el pago nuevamente.'
                 : 'Tu pedido ha sido recibido y está siendo procesado. Te contactaremos pronto con los detalles.'}
             </p>
             {order && (

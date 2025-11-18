@@ -12,6 +12,8 @@ export default function OrderDetailPage() {
   const orderId = params.id as string;
   const [order, setOrder] = useState<any>(null);
   const [orderItem, setOrderItem] = useState<any>(null);
+  const [framingOption, setFramingOption] = useState<any>(null);
+  const [mediaType, setMediaType] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
@@ -41,6 +43,32 @@ export default function OrderDetailPage() {
 
         setOrder(orderData);
         setOrderItem(itemData);
+
+        // Fetch framing option name if framing_option_id exists
+        if (itemData?.framing_option_id) {
+          const { data: framingData, error: framingError } = await supabase
+            .from("framing_options")
+            .select("id, name, description, price")
+            .eq("id", itemData.framing_option_id)
+            .single();
+
+          if (!framingError && framingData) {
+            setFramingOption(framingData);
+          }
+        }
+
+        // Fetch media type name if media_type_id exists
+        if (itemData?.media_type_id) {
+          const { data: mediaData, error: mediaError } = await supabase
+            .from("media_types")
+            .select("id, name, description")
+            .eq("id", itemData.media_type_id)
+            .single();
+
+          if (!mediaError && mediaData) {
+            setMediaType(mediaData);
+          }
+        }
       } catch (error) {
         console.error("Error fetching order:", error);
         router.push("/admin/orders");
@@ -234,6 +262,19 @@ export default function OrderDetailPage() {
                 Detalles del Item
               </h3>
               <div className="space-y-3">
+                {mediaType && (
+                  <div>
+                    <span className="text-gray-600">Tipo de Medio:</span>
+                    <p className="font-medium text-gray-900">
+                      {mediaType.name}
+                    </p>
+                    {mediaType.description && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        {mediaType.description}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <span className="text-gray-600">Tamaño:</span>
                   <p className="font-medium text-gray-900">
@@ -241,12 +282,29 @@ export default function OrderDetailPage() {
                     {orderItem.size_unit}
                   </p>
                 </div>
-                {orderItem.framing_option_id && (
+                {framingOption ? (
                   <div>
                     <span className="text-gray-600">Enmarcado:</span>
                     <p className="font-medium text-gray-900">
-                      ID: {orderItem.framing_option_id.substring(0, 8)}...
+                      {framingOption.name}
                     </p>
+                    {framingOption.description && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        {framingOption.description}
+                      </p>
+                    )}
+                  </div>
+                ) : orderItem.framing_option_id ? (
+                  <div>
+                    <span className="text-gray-600">Enmarcado:</span>
+                    <p className="font-medium text-gray-900 text-yellow-600">
+                      (ID: {orderItem.framing_option_id.substring(0, 8)}... - No encontrado)
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="text-gray-600">Enmarcado:</span>
+                    <p className="font-medium text-gray-900">Sin Marco</p>
                   </div>
                 )}
                 <div>
