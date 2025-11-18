@@ -58,6 +58,7 @@ function CheckoutSuccessContent() {
             },
             body: JSON.stringify({
               token_ws: tokenWs,
+              order_id: currentOrderId, // Pass order_id if available to help with lookup
             }),
           });
 
