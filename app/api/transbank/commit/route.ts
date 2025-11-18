@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         console.log('Trying to find order by provided order_id:', order_id);
         const { data: orderById, error: idError } = await supabase
           .from('orders')
-          .select('id')
+          .select('id, transbank_buy_order')
           .eq('id', order_id)
           .single();
         
