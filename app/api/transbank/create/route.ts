@@ -130,7 +130,14 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (updateError) {
-      console.error('CRITICAL: Error updating order with Transbank info:', updateError);
+      console.error('CRITICAL: Error updating order with Transbank info:', {
+        error: updateError,
+        code: updateError.code,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        orderId: orderId.substring(0, 8) + '...',
+      });
       // This is critical - return error so we know the update failed
       return NextResponse.json(
         { 
@@ -142,7 +149,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!updateData || updateData.length === 0) {
-      console.error('CRITICAL: Order update returned no rows. Order may not exist or RLS is blocking update.');
+      console.error('CRITICAL: Order update returned no rows. Order may not exist or RLS is blocking update:', {
+        orderId: orderId.substring(0, 8) + '...',
+        buyOrder,
+      });
       return NextResponse.json(
         { 
           error: 'Failed to update order. The order may not exist or there may be a permissions issue.',
@@ -157,11 +167,13 @@ export async function POST(request: NextRequest) {
       tokenSet: !!token,
       rowsUpdated: updateData.length,
       updatedOrder: {
-        id: updateData[0].id,
+        id: updateData[0].id?.substring(0, 8) + '...',
+        status: updateData[0].status,
         hasToken: !!updateData[0].transbank_token,
         hasBuyOrder: !!updateData[0].transbank_buy_order,
-        status: updateData[0].status,
-      }
+        buyOrderValue: updateData[0].transbank_buy_order,
+        tokenPrefix: updateData[0].transbank_token ? updateData[0].transbank_token.substring(0, 10) + '...' : null,
+      },
     });
 
     return NextResponse.json({

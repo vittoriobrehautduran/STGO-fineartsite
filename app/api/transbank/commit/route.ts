@@ -79,7 +79,13 @@ export async function POST(request: NextRequest) {
         .single();
       
       if (idError) {
-        console.error('Error finding order by order_id:', idError);
+        console.error('Error finding order by order_id:', {
+          error: idError,
+          code: idError.code,
+          message: idError.message,
+          details: idError.details,
+          hint: idError.hint,
+        });
       }
       
       if (orderById && !idError) {
@@ -88,7 +94,9 @@ export async function POST(request: NextRequest) {
         console.log('Order found by order_id:', {
           orderId: orderId.substring(0, 8) + '...',
           hasBuyOrder: !!orderById.transbank_buy_order,
+          buyOrderValue: orderById.transbank_buy_order,
           hasToken: !!orderById.transbank_token,
+          tokenPrefix: orderById.transbank_token ? orderById.transbank_token.substring(0, 10) + '...' : null,
           status: orderById.status,
         });
       } else {
