@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Product } from "@/types/product";
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useCart } from "@/contexts/CartContext";
+import { useRouter } from "next/navigation";
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +16,8 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedFraming, setSelectedFraming] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const { addToCart } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -49,12 +53,40 @@ export default function ProductCard({ product }: ProductCardProps) {
       alert("Por favor selecciona un tamaño");
       return;
     }
-    // TODO: Implement cart functionality
-    console.log("Add to cart:", {
+
+    const selectedSizeObj = product.sizes.find((s) => s.id === selectedSize);
+    const selectedFramingObj = product.framingOptions.find(
+      (f) => f.id === selectedFraming
+    );
+
+    if (!selectedSizeObj) {
+      alert("Error: Tamaño no encontrado");
+      return;
+    }
+
+    const cartItem = {
       productId: product.id,
+      productName: product.name,
+      productImage: product.image,
       sizeId: selectedSize,
-      framingId: selectedFraming,
-    });
+      size: {
+        width: selectedSizeObj.width,
+        height: selectedSizeObj.height,
+        unit: selectedSizeObj.unit,
+      },
+      sizePrice: selectedSizeObj.price,
+      framingId: selectedFraming || null,
+      framingName: selectedFramingObj?.name || null,
+      framingPrice: selectedFramingObj?.price || 0,
+      quantity: 1,
+      totalPrice: selectedSizeObj.price + (selectedFramingObj?.price || 0),
+    };
+
+    addToCart(cartItem);
+    handleCloseModal();
+    
+    // Show success message
+    alert("Producto agregado al carrito");
   };
 
   const handleBackdropClick = () => {

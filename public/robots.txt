@@ -2,7 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /checkout/
 Disallow: /checkout/success
+Disallow: /policies
 
 # Sitemap
 Sitemap: https://stgofineart.netlify.app/sitemap.xml

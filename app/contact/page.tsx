@@ -147,7 +147,7 @@ export default function ContactPage() {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             {/* Contact Information */}
-            <div className="space-y-6 lg:order-2">
+            <div className="space-y-6 order-2 lg:order-2">
               <div className="bg-white rounded-2xl p-8 sm:p-10 shadow-lg border border-gray-100">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                   Información de Contacto
@@ -220,7 +220,7 @@ export default function ContactPage() {
             </div>
 
             {/* Contact Form */}
-            <div className="lg:order-1">
+            <div className="order-1 lg:order-1">
               <form
                 onSubmit={handleSubmit}
                 className="bg-white rounded-3xl p-10 sm:p-12 shadow-2xl border-2 border-gray-900 space-y-6 relative overflow-hidden"

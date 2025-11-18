@@ -13,6 +13,8 @@ function CheckoutContent() {
   const orderId = searchParams.get("orderId");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -39,6 +41,113 @@ function CheckoutContent() {
 
     fetchOrder();
   }, [orderId]);
+
+  const handlePayWithTransbank = async () => {
+    if (!order || !orderId) {
+      setPaymentError('No se pudo cargar la información del pedido');
+      return;
+    }
+
+    setProcessingPayment(true);
+    setPaymentError(null);
+
+    try {
+      // Create Transbank transaction
+      const response = await fetch('/api/transbank/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          amount: order.total_amount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('Transbank API error:', data);
+        throw new Error(data.error || data.details || 'Error al crear el pago');
+      }
+
+      if (!data.url || !data.token) {
+        console.error('Invalid Transbank response:', data);
+        throw new Error('No se recibió la URL de pago de Transbank. Respuesta: ' + JSON.stringify(data));
+      }
+
+      console.log('Redirecting to Transbank:', data.url, 'Token:', data.token);
+
+      // Transbank Webpay Plus requires form POST to initTransaction endpoint
+      // Use the correct endpoint format - Transbank expects initTransaction (camelCase)
+      // The SDK should return the correct URL, but ensure it's the right format
+      let transbankUrl = data.url;
+      
+      // Ensure we have the correct endpoint
+      if (transbankUrl && !transbankUrl.includes('initTransaction') && !transbankUrl.includes('init_transaction')) {
+        // If URL is just the base, add the endpoint
+        const baseUrl = transbankUrl.replace(/\/$/, ''); // Remove trailing slash
+        transbankUrl = `${baseUrl}/webpayserver/initTransaction`;
+      }
+      
+      // Fallback to correct integration URL
+      if (!transbankUrl || transbankUrl === 'https://webpay3gint.transbank.cl/webpayserver/initTransaction') {
+        transbankUrl = 'https://webpay3gint.transbank.cl/webpayserver/initTransaction';
+      }
+      
+      console.log('Using Transbank URL:', transbankUrl);
+      console.log('Form will POST with token_ws:', data.token);
+      
+      // Create a form and submit it
+      // Transbank requires POST with token_ws parameter
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = transbankUrl;
+      form.style.display = 'none';
+      form.target = '_self';
+      form.id = 'transbank-form';
+      
+      const tokenInput = document.createElement('input');
+      tokenInput.type = 'hidden';
+      tokenInput.name = 'token_ws';
+      tokenInput.value = data.token;
+      form.appendChild(tokenInput);
+      
+      // Remove any existing form
+      const existingForm = document.getElementById('transbank-form');
+      if (existingForm) {
+        existingForm.remove();
+      }
+      
+      document.body.appendChild(form);
+      
+      // Show loading state - but don't set to false since we're redirecting
+      // The form submission will navigate away from the page
+      
+      // Wait a moment to ensure form is in DOM, then submit
+      setTimeout(() => {
+        try {
+          // Verify form is in DOM
+          if (!document.body.contains(form)) {
+            console.error('Form not in DOM, re-adding...');
+            document.body.appendChild(form);
+          }
+          
+          // Submit form
+          console.log('Submitting form to:', transbankUrl);
+          form.submit();
+        } catch (submitError) {
+          console.error('Form submit error:', submitError);
+          setPaymentError('Error al redirigir a Transbank. Por favor, intenta de nuevo.');
+          setProcessingPayment(false);
+        }
+      }, 50);
+    } catch (error: any) {
+      console.error('Error initiating payment:', error);
+      setPaymentError(error.message || 'Error al procesar el pago. Por favor, intenta de nuevo.');
+      setProcessingPayment(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -79,10 +188,12 @@ function CheckoutContent() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Pedido Recibido
+              {order?.status === 'paid' ? 'Pago Completado' : 'Completar Pago'}
             </h1>
             <p className="text-gray-600">
-              Tu pedido ha sido guardado exitosamente. Nos pondremos en contacto contigo pronto para completar el pago.
+              {order?.status === 'paid' 
+                ? 'Tu pago ha sido procesado exitosamente. Te contactaremos pronto para coordinar la entrega.'
+                : 'Completa el pago de tu pedido de forma segura con Transbank.'}
             </p>
             {order && (
               <div className="bg-gray-50 rounded-lg p-6 text-left space-y-2">
@@ -100,18 +211,72 @@ function CheckoutContent() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Estado:</span>
-                  <span className="font-semibold text-blue-600">
-                    Pendiente de pago
+                  <span className={`font-semibold ${
+                    order?.status === 'paid' ? 'text-green-600' : 
+                    order?.status === 'payment_failed' ? 'text-red-600' : 
+                    'text-blue-600'
+                  }`}>
+                    {order?.status === 'paid' ? 'Pagado' : 
+                     order?.status === 'payment_failed' ? 'Pago Fallido' : 
+                     'Pendiente de pago'}
                   </span>
                 </div>
               </div>
             )}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-              <h3 className="font-semibold text-blue-900 mb-2">Próximos Pasos:</h3>
-              <p className="text-sm text-blue-800">
-                Te contactaremos en breve a través de {order?.customer_email} para coordinar el método de pago y la entrega de tu pedido.
-              </p>
-            </div>
+            
+            {paymentError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">{paymentError}</p>
+              </div>
+            )}
+
+            {order?.status !== 'paid' && (
+              <div className="space-y-4">
+                {processingPayment && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-blue-800 font-medium">
+                      Redirigiendo a Transbank...
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Por favor, espera mientras te redirigimos a la página de pago
+                    </p>
+                  </div>
+                )}
+                <button
+                  onClick={handlePayWithTransbank}
+                  disabled={processingPayment || !order}
+                  className="w-full px-6 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  {processingPayment ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Procesando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span>Pagar con Transbank</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-gray-500 text-center">
+                  Pago seguro procesado por Transbank
+                </p>
+              </div>
+            )}
+
+            {order?.status === 'paid' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
+                <h3 className="font-semibold text-green-900 mb-2">¡Pago Confirmado!</h3>
+                <p className="text-sm text-green-800">
+                  Te contactaremos en breve a través de {order?.customer_email} para coordinar la entrega de tu pedido.
+                </p>
+              </div>
+            )}
+
             <div className="flex gap-4 justify-center">
               <Link
                 href="/"

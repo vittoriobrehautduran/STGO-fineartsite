@@ -55,8 +55,10 @@ export default function OrderFlow() {
 
   // Customer info
   const [customerEmail, setCustomerEmail] = useState("");
-  const [customerName, setCustomerName] = useState("");
+  const [customerFirstName, setCustomerFirstName] = useState("");
+  const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
 
   // Error handling
   const [error, setError] = useState<string | null>(null);
@@ -197,8 +199,9 @@ export default function OrderFlow() {
   };
 
   const handleCreateOrder = async () => {
-    if (!customerEmail || !customerName) {
-      setError("Por favor completa tu información de contacto");
+    // Validate required fields
+    if (!customerEmail || !customerFirstName || !customerLastName || !customerAddress) {
+      setError("Por favor completa todos los campos requeridos (Nombre, Apellido, Email y Dirección)");
       return;
     }
 
@@ -213,15 +216,21 @@ export default function OrderFlow() {
     try {
       const totalAmount = calculateTotal();
 
+      // Combine first name and last name for customer_name
+      const fullName = `${customerFirstName} ${customerLastName}`.trim();
+
       // Create order in database
       const orderDataToInsert: any = {
         customer_email: customerEmail,
-        customer_name: customerName,
+        customer_name: fullName,
         customer_phone: customerPhone || null,
         total_amount: totalAmount,
         status: "pending",
         image_url: uploadedImageUrl,
       };
+
+      // Note: customer_address field is collected but not stored in database yet
+      // The address column needs to be added to the orders table first
 
       // Add special requests if provided (only if the field exists in the database)
       if (specialRequests.trim()) {
@@ -685,9 +694,17 @@ export default function OrderFlow() {
             </h3>
             <input
               type="text"
-              placeholder="Nombre completo *"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Nombre *"
+              value={customerFirstName}
+              onChange={(e) => setCustomerFirstName(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Apellido *"
+              value={customerLastName}
+              onChange={(e) => setCustomerLastName(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               required
             />
@@ -705,6 +722,14 @@ export default function OrderFlow() {
               value={customerPhone}
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+            />
+            <textarea
+              placeholder="Dirección * (Calle, Número, Comuna, Ciudad)"
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
+              rows={3}
+              required
             />
           </div>
 

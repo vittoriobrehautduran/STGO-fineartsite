@@ -11,8 +11,10 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get("order_id");
+  const tokenWs = searchParams.get("token_ws");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'failed' | null>(null);
 
   useEffect(() => {
     async function verifyPayment() {
@@ -22,6 +24,42 @@ function CheckoutSuccessContent() {
       }
 
       try {
+        // If we have a token_ws, commit the transaction first
+        if (tokenWs) {
+          setPaymentStatus('processing');
+          
+          const commitResponse = await fetch('/api/transbank/commit', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token_ws: tokenWs,
+            }),
+          });
+
+          const commitData = await commitResponse.json();
+          
+          if (commitData.success) {
+            setPaymentStatus('success');
+            // Update orderId if we got a new one from the commit
+            if (commitData.orderId) {
+              // Fetch updated order
+              const { data: orderData } = await supabase
+                .from("orders")
+                .select("*")
+                .eq("id", commitData.orderId)
+                .single();
+              
+              if (orderData) {
+                setOrder(orderData);
+              }
+            }
+          } else {
+            setPaymentStatus('failed');
+          }
+        }
+
         // Fetch order details
         const { data: orderData, error: orderError } = await supabase
           .from("orders")
@@ -32,16 +70,19 @@ function CheckoutSuccessContent() {
         if (orderError) throw orderError;
 
         // Set order data
-        setOrder(orderData);
+        if (!order) {
+          setOrder(orderData);
+        }
       } catch (err: any) {
         console.error("Error verifying payment:", err);
+        setPaymentStatus('failed');
       } finally {
         setLoading(false);
       }
     }
 
     verifyPayment();
-  }, [orderId]);
+  }, [orderId, tokenWs]);
 
   if (loading) {
     return (
@@ -80,10 +121,16 @@ function CheckoutSuccessContent() {
               </svg>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">
-              ¡Pago Exitoso!
+              {paymentStatus === 'failed' ? 'Pago Fallido' : 
+               paymentStatus === 'processing' ? 'Procesando Pago...' :
+               '¡Pago Exitoso!'}
             </h1>
             <p className="text-gray-600">
-              Tu pedido ha sido recibido y está siendo procesado.
+              {paymentStatus === 'failed' 
+                ? 'Hubo un problema al procesar tu pago. Por favor, intenta de nuevo.'
+                : paymentStatus === 'processing'
+                ? 'Estamos verificando tu pago...'
+                : 'Tu pedido ha sido recibido y está siendo procesado.'}
             </p>
             {order && (
               <div className="bg-gray-50 rounded-lg p-6 text-left space-y-2">
