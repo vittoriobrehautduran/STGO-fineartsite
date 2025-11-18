@@ -66,19 +66,22 @@ export default function CartPage() {
       if (orderError) throw orderError;
 
       // Create order items
+      // Note: order_items table doesn't have product_id or quantity columns
+      // Each cart item is inserted as a separate order_item
       for (const item of cartItems) {
-        const { error: itemError } = await supabase.from("order_items").insert({
-          order_id: orderData.id,
-          product_id: item.productId,
-          size_width: item.size.width,
-          size_height: item.size.height,
-          size_unit: item.size.unit,
-          framing_option_id: item.framingId || null,
-          item_price: item.totalPrice,
-          quantity: item.quantity,
-        });
+        // Insert one order_item per quantity unit
+        for (let i = 0; i < item.quantity; i++) {
+          const { error: itemError } = await supabase.from("order_items").insert({
+            order_id: orderData.id,
+            size_width: item.size.width,
+            size_height: item.size.height,
+            size_unit: item.size.unit,
+            framing_option_id: item.framingId || null,
+            item_price: item.totalPrice / item.quantity, // Price per unit
+          });
 
-        if (itemError) throw itemError;
+          if (itemError) throw itemError;
+        }
       }
 
       // Clear cart
