@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order with Transbank transaction info
+    // This is critical - if this fails, the commit won't be able to find the order
     const { error: updateError, data: updateData } = await supabase
       .from('orders')
       .update({
@@ -129,16 +130,39 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (updateError) {
-      console.error('Error updating order with Transbank info:', updateError);
-      // Don't fail the request, but log the error
-    } else {
-      console.log('Order updated successfully with Transbank info:', {
-        orderId: orderId.substring(0, 8) + '...',
-        buyOrder,
-        tokenSet: !!token,
-        rowsUpdated: updateData?.length || 0,
-      });
+      console.error('CRITICAL: Error updating order with Transbank info:', updateError);
+      // This is critical - return error so we know the update failed
+      return NextResponse.json(
+        { 
+          error: 'Failed to save payment information. Please try again.',
+          details: process.env.NODE_ENV === 'development' ? updateError.message : undefined
+        },
+        { status: 500 }
+      );
     }
+
+    if (!updateData || updateData.length === 0) {
+      console.error('CRITICAL: Order update returned no rows. Order may not exist or RLS is blocking update.');
+      return NextResponse.json(
+        { 
+          error: 'Failed to update order. The order may not exist or there may be a permissions issue.',
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('Order updated successfully with Transbank info:', {
+      orderId: orderId.substring(0, 8) + '...',
+      buyOrder,
+      tokenSet: !!token,
+      rowsUpdated: updateData.length,
+      updatedOrder: {
+        id: updateData[0].id,
+        hasToken: !!updateData[0].transbank_token,
+        hasBuyOrder: !!updateData[0].transbank_buy_order,
+        status: updateData[0].status,
+      }
+    });
 
     return NextResponse.json({
       token: token,
