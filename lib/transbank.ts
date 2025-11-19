@@ -19,6 +19,9 @@ const useIntegration = isExplicitIntegration ||
 
 // Get values with fallbacks only for development/integration
 // In production, these should be set via environment variables
+// IMPORTANT: For integration testing, use the test commerce code (597055555532) 
+// which supports all payment methods (credit, debit, prepago)
+// Your actual commerce code (53027170) might be configured only for credit cards
 export const TRANSBANK_COMMERCE_CODE = process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 
   (process.env.NODE_ENV === 'production' ? undefined : DEFAULT_TEST_COMMERCE_CODE);
 
@@ -39,6 +42,8 @@ export function getTransbankClient() {
 
   // Log configuration without exposing full API key
   const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
+  const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
+  
   console.log('Transbank Configuration:', {
     commerceCode: TRANSBANK_COMMERCE_CODE,
     apiKeySet: !!TRANSBANK_API_KEY,
@@ -46,7 +51,15 @@ export function getTransbankClient() {
     environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
     useIntegration,
     nodeEnv: process.env.NODE_ENV,
+    isTestCommerceCode,
   });
+  
+  // Warn if using actual commerce code in integration - it might not support all payment methods
+  if (useIntegration && !isTestCommerceCode) {
+    console.warn('⚠️  Using actual commerce code in integration environment.');
+    console.warn('⚠️  For testing all payment methods (credit, debit, prepago), use the test commerce code:', DEFAULT_TEST_COMMERCE_CODE);
+    console.warn('⚠️  Your commerce code might be configured only for credit cards. Contact Transbank to enable debit and prepago.');
+  }
   
   const options = new Options(
     TRANSBANK_COMMERCE_CODE,

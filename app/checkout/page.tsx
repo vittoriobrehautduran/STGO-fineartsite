@@ -79,24 +79,15 @@ function CheckoutContent() {
 
       console.log('Redirecting to Transbank:', data.url, 'Token:', data.token);
 
-      // Transbank Webpay Plus requires form POST to initTransaction endpoint
-      // Use the correct endpoint format - Transbank expects initTransaction (camelCase)
-      // The SDK should return the correct URL, but ensure it's the right format
-      let transbankUrl = data.url;
+      // Use the URL exactly as returned by the Transbank SDK
+      // The SDK handles the correct endpoint format based on environment
+      const transbankUrl = data.url;
       
-      // Ensure we have the correct endpoint
-      if (transbankUrl && !transbankUrl.includes('initTransaction') && !transbankUrl.includes('init_transaction')) {
-        // If URL is just the base, add the endpoint
-        const baseUrl = transbankUrl.replace(/\/$/, ''); // Remove trailing slash
-        transbankUrl = `${baseUrl}/webpayserver/initTransaction`;
+      if (!transbankUrl) {
+        throw new Error('No URL received from Transbank');
       }
       
-      // Fallback to correct integration URL
-      if (!transbankUrl || transbankUrl === 'https://webpay3gint.transbank.cl/webpayserver/initTransaction') {
-        transbankUrl = 'https://webpay3gint.transbank.cl/webpayserver/initTransaction';
-      }
-      
-      console.log('Using Transbank URL:', transbankUrl);
+      console.log('Using Transbank URL (from SDK):', transbankUrl);
       console.log('Form will POST with token_ws:', data.token);
       
       // Create a form and submit it

@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { Zen_Tokyo_Zoo } from "next/font/google";
 import SplittingText from "./SplittingText";
 import { useEffect, useRef } from "react";
@@ -153,15 +152,9 @@ export default function Hero() {
           >
             <SplittingText text="STGO FINE ART" delay={300} />
           </h1>
-          <p className="text-white text-sm sm:text-base md:text-xl lg:text-2xl xl:text-3xl font-light tracking-[0.15em] uppercase opacity-95 px-2 mb-8 sm:mb-10">
+          <p className="text-white text-sm sm:text-base md:text-xl lg:text-2xl xl:text-3xl font-light tracking-[0.15em] uppercase opacity-95 px-2">
             Estudio de impresión Fine Art y enmarcado
           </p>
-          <Link
-            href="/upload"
-            className="inline-block px-8 py-4 sm:px-10 sm:py-5 bg-white text-gray-900 text-lg sm:text-xl font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:shadow-2xl hover:scale-105"
-          >
-            Comenzar tu Pedido
-          </Link>
         </div>
       </div>
     </section>

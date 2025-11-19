@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
       buyOrder,
       amount,
       orderId: orderId.substring(0, 8) + '...',
+      commerceCode: process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 'using default test code',
+      environment: process.env.TRANSBANK_ENV || process.env.NODE_ENV,
     });
     
     // Transbank expects amount as integer (in cents/CLP)
@@ -88,11 +90,13 @@ export async function POST(request: NextRequest) {
     const response = await Promise.race([createPromise, timeoutPromise]) as any;
 
     // Log response without exposing full token
+    // Log the actual URL to verify it's correct (URLs are safe to log)
     const safeResponse = {
       token: response.token ? response.token.substring(0, 10) + '...' : null,
-      url: response.url ? '***' : null,
+      url: response.url || null, // Log actual URL to verify it's correct
       hasToken: !!response.token,
       hasUrl: !!response.url,
+      fullResponseKeys: Object.keys(response || {}),
     };
     console.log('Transbank response received:', safeResponse);
 
