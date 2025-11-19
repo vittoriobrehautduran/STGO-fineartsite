@@ -231,6 +231,15 @@ export default function OrderDetailPage() {
                   {new Date(order.created_at).toLocaleString("es-CL")}
                 </span>
               </div>
+              {order.transbank_token && (
+                <div className="flex flex-col gap-1 pt-2 border-t border-gray-200">
+                  <span className="text-gray-600 text-sm">Transbank Token (para integración):</span>
+                  <code className="text-xs font-mono bg-gray-100 p-2 rounded break-all text-gray-900">
+                    {order.transbank_token}
+                  </code>
+                  <span className="text-xs text-gray-500">Buy Order: {order.transbank_buy_order || 'N/A'}</span>
+                </div>
+              )}
             </div>
           </div>
 
