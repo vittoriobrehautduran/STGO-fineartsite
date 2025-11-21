@@ -21,7 +21,7 @@ const useIntegration = isExplicitIntegration ||
 // In production, these should be set via environment variables
 // IMPORTANT: For integration testing, use the test commerce code (597055555532) 
 // which supports all payment methods (credit, debit, prepago)
-// Your actual commerce code (53027170) might be configured only for credit cards
+// Production commerce code: 597053027170
 export const TRANSBANK_COMMERCE_CODE = process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 
   (process.env.NODE_ENV === 'production' ? undefined : DEFAULT_TEST_COMMERCE_CODE);
 
@@ -76,7 +76,8 @@ export function getTransbankClient() {
 
 // Generate return URLs
 export function getReturnUrls(orderId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.netlify.app';
+  // Use the actual production domain
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.com';
   
   return {
     returnUrl: `${baseUrl}/checkout/success?order_id=${orderId}`,

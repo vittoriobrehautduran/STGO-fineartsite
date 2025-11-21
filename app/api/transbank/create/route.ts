@@ -39,10 +39,21 @@ export async function POST(request: NextRequest) {
         orderId: orderId,
       });
       
+      // Check if it's an authentication error
+      if (orderError.message?.includes('Invalid API key') || orderError.code === 'PGRST301') {
+        return NextResponse.json(
+          { 
+            error: 'Configuration error: Invalid Supabase service role key. Please check SUPABASE_SERVICE_ROLE_KEY in Netlify environment variables.',
+            details: 'The service role key is required for API routes to access orders.'
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
         { 
           error: 'Order not found',
-          details: process.env.NODE_ENV === 'development' ? orderError.message : undefined
+          details: process.env.NODE_ENV === 'development' ? orderError.message : 'Order may not exist or there is a permissions issue'
         },
         { status: 404 }
       );
