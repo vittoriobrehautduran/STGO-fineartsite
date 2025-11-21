@@ -39,8 +39,8 @@ export default function DonationSection() {
 
     // Validate amount
     const amount = getDonationAmount();
-    if (amount < 1000) {
-      setError("El monto mínimo de donación es $1.000 CLP");
+    if (amount < 50) {
+      setError("El monto mínimo de donación es $50 CLP");
       return;
     }
 
@@ -59,7 +59,9 @@ export default function DonationSection() {
 
     try {
       // Create donation order
-      const orderData = {
+      // Note: special_requests column needs to be added via migration
+      // If the column doesn't exist, this will fail - run migrations/add-special-requests-column.sql
+      const orderData: any = {
         customer_email: customerEmail.trim(),
         customer_name: customerName.trim(),
         customer_phone: null,
@@ -196,7 +198,7 @@ export default function DonationSection() {
             {/* Donate Button */}
             <button
               onClick={handleDonate}
-              disabled={isProcessing || donationAmount < 1000 || !customerName.trim() || !customerEmail.trim()}
+              disabled={isProcessing || donationAmount < 50 || !customerName.trim() || !customerEmail.trim()}
               className="w-full px-6 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {isProcessing ? (

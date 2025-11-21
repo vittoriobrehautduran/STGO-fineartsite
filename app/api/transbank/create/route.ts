@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,18 +14,52 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify order exists and validate amount matches
+    const supabaseAdmin = getSupabaseAdmin();
+    
+    console.log('Looking for order:', {
+      orderId: orderId,
+      orderIdLength: orderId?.length,
+      orderIdType: typeof orderId,
+    });
+    
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*')
       .eq('id', orderId)
       .single();
 
-    if (orderError || !order) {
+    if (orderError) {
+      console.error('Error fetching order:', {
+        error: orderError,
+        code: orderError.code,
+        message: orderError.message,
+        details: orderError.details,
+        hint: orderError.hint,
+        orderId: orderId,
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Order not found',
+          details: process.env.NODE_ENV === 'development' ? orderError.message : undefined
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!order) {
+      console.error('Order query returned no data:', { orderId });
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
     }
+    
+    console.log('Order found:', {
+      orderId: order.id?.substring(0, 8) + '...',
+      totalAmount: order.total_amount,
+      status: order.status,
+    });
 
     // Validate that the amount matches the order total
     // Allow small rounding differences (1 CLP) due to integer conversion

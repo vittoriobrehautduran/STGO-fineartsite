@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient } from '@/lib/transbank';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
     console.log('Transbank commit response:', JSON.stringify(safeResponse, null, 2));
 
     // Find order - prioritize order_id if provided, then token, then buy_order
+    const supabaseAdmin = getSupabaseAdmin();
     const buyOrder = response.buy_order || '';
     let orderData = null;
     let orderId = null;
