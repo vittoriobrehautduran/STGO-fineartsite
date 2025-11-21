@@ -13,9 +13,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log token prefix only (first 10 chars) for security
-    const tokenPrefix = token_ws.substring(0, 10) + '...';
-    console.log('Committing Transbank transaction with token:', tokenPrefix);
+    // Log token prefix only in development
+    if (process.env.NODE_ENV === 'development') {
+      const tokenPrefix = token_ws.substring(0, 10) + '...';
+      console.log('Committing Transbank transaction with token:', tokenPrefix);
+    }
 
     // Commit the transaction in Transbank
     const transaction = getTransbankClient();
@@ -76,17 +78,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Log response without sensitive data
-    const safeResponse = {
-      response_code: response.response_code,
-      status: response.status,
-      buy_order: response.buy_order,
-      amount: response.amount,
-      transaction_date: response.transaction_date,
-      payment_type_code: response.payment_type_code, // VD = débito, VP = prepago, VN = crédito
-      // Don't log authorization_code or other sensitive fields in production
-    };
-    console.log('Transbank commit response:', JSON.stringify(safeResponse, null, 2));
+    // Log response without sensitive data (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      const safeResponse = {
+        response_code: response.response_code,
+        status: response.status,
+        buy_order: response.buy_order,
+        amount: response.amount,
+        transaction_date: response.transaction_date,
+        payment_type_code: response.payment_type_code,
+      };
+      console.log('Transbank commit response:', JSON.stringify(safeResponse, null, 2));
+    }
 
     // Find order - prioritize order_id if provided, then token, then buy_order
     const supabaseAdmin = getSupabaseAdmin();
@@ -96,7 +99,6 @@ export async function POST(request: NextRequest) {
     
     // First: try to find by order_id if provided (most reliable)
     if (order_id) {
-      console.log('Looking for order by provided order_id:', order_id.substring(0, 8) + '...');
       const { data: orderById, error: idError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_buy_order, transbank_token, total_amount, status')
@@ -116,23 +118,11 @@ export async function POST(request: NextRequest) {
       if (orderById && !idError) {
         orderData = orderById;
         orderId = orderById.id;
-        console.log('Order found by order_id:', {
-          orderId: orderId.substring(0, 8) + '...',
-          hasBuyOrder: !!orderById.transbank_buy_order,
-          buyOrderValue: orderById.transbank_buy_order,
-          hasToken: !!orderById.transbank_token,
-          tokenPrefix: orderById.transbank_token ? orderById.transbank_token.substring(0, 10) + '...' : null,
-          status: orderById.status,
-        });
-      } else {
-        console.log('Order not found by order_id, will try other methods');
       }
     }
     
     // Second: try to find by token if order_id didn't work
     if (!orderData && token_ws) {
-      const tokenPrefix = token_ws.substring(0, 10) + '...';
-      console.log('Looking for order by token_ws:', tokenPrefix);
       const { data: orderByToken, error: tokenError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_token, transbank_buy_order, total_amount, status')
@@ -142,13 +132,11 @@ export async function POST(request: NextRequest) {
       if (orderByToken && !tokenError) {
         orderData = orderByToken;
         orderId = orderByToken.id;
-        console.log('Order found by token');
       }
     }
     
     // Third: try to find by buy_order as last resort
     if (!orderData && buyOrder) {
-      console.log('Looking for order by buy_order:', buyOrder);
       const { data: orderByBuyOrder, error: buyOrderError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_buy_order, transbank_token, total_amount, status')
@@ -158,35 +146,15 @@ export async function POST(request: NextRequest) {
       if (orderByBuyOrder && !buyOrderError) {
         orderData = orderByBuyOrder;
         orderId = orderByBuyOrder.id;
-        console.log('Order found by buy_order');
       }
     }
     
-    // If still not found, return error with more details
+    // If still not found, return error
     if (!orderData || !orderId) {
-      // Try one more time with full order_id (not truncated) to see if it exists
-      let fullOrderCheck = null;
-      if (order_id) {
-        const { data: fullOrder } = await supabaseAdmin
-          .from('orders')
-          .select('id, status, transbank_token, transbank_buy_order')
-          .eq('id', order_id)
-          .maybeSingle();
-        fullOrderCheck = fullOrder;
-      }
-      
-      console.error('Order not found by any method', {
+      console.error('Order not found for transaction', {
         orderIdProvided: order_id ? order_id.substring(0, 8) + '...' : null,
-        orderIdFull: order_id,
         buyOrderSearched: buyOrder || null,
         hasToken: !!token_ws,
-        tokenPrefix: token_ws ? token_ws.substring(0, 20) + '...' : null,
-        fullOrderCheck: fullOrderCheck ? {
-          found: true,
-          hasToken: !!fullOrderCheck.transbank_token,
-          hasBuyOrder: !!fullOrderCheck.transbank_buy_order,
-          status: fullOrderCheck.status,
-        } : { found: false },
       });
       
       return NextResponse.json(
@@ -200,7 +168,6 @@ export async function POST(request: NextRequest) {
 
     // Protection against re-commits: check if order is already paid
     if (orderData.status === 'paid') {
-      console.log('Order already paid, skipping commit');
       return NextResponse.json({
         success: true,
         orderId: orderId,
@@ -236,23 +203,21 @@ export async function POST(request: NextRequest) {
     const isApproved = response.response_code === 0;
     const orderStatus = isApproved ? 'paid' : 'payment_failed';
     
-    // Log payment result without sensitive data
-    console.log('Payment result:', { 
-      isApproved, 
-      response_code: response.response_code, 
-      status: response.status,
-      buy_order: response.buy_order,
-      // Log full response in development to debug test payments
-      ...(process.env.NODE_ENV === 'development' && { fullResponse: response })
-    });
-    
-    // If payment was rejected, log why (for debugging test payments)
-    if (!isApproved) {
-      console.warn('Payment rejected by Transbank:', {
-        response_code: response.response_code,
+    // Log payment result only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Payment result:', { 
+        isApproved, 
+        response_code: response.response_code, 
         status: response.status,
-        // Common response codes: 0 = approved, -1 = rejected, others = various errors
+        buy_order: response.buy_order,
       });
+      
+      if (!isApproved) {
+        console.warn('Payment rejected by Transbank:', {
+          response_code: response.response_code,
+          status: response.status,
+        });
+      }
     }
     
     // Extract card number from various possible response structures

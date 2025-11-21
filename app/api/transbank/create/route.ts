@@ -17,12 +17,6 @@ export async function POST(request: NextRequest) {
     // Verify order exists and validate amount matches
     const supabaseAdmin = getSupabaseAdmin();
     
-    console.log('Looking for order:', {
-      orderId: orderId,
-      orderIdLength: orderId?.length,
-      orderIdType: typeof orderId,
-    });
-    
     const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*')
@@ -60,18 +54,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (!order) {
-      console.error('Order query returned no data:', { orderId });
+      console.error('Order query returned no data:', { orderId: orderId?.substring(0, 8) + '...' });
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
       );
     }
-    
-    console.log('Order found:', {
-      orderId: order.id?.substring(0, 8) + '...',
-      totalAmount: order.total_amount,
-      status: order.status,
-    });
 
     // Validate that the amount matches the order total
     // Allow small rounding differences (1 CLP) due to integer conversion
@@ -109,26 +97,12 @@ export async function POST(request: NextRequest) {
     const buyOrder = `ORD-${shortId}-${timestamp}`.substring(0, 26);
     const sessionId = orderId.substring(0, 61); // Max 61 characters
     
-    // Log transaction creation without sensitive data
-    console.log('Creating Transbank transaction:', {
-      buyOrder,
-      amount,
-      orderId: orderId.substring(0, 8) + '...',
-      commerceCode: process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 'using default test code',
-      environment: process.env.TRANSBANK_ENV || process.env.NODE_ENV,
-    });
-    
     // Transbank expects amount as integer (in cents/CLP)
     // Convert to integer if it's a decimal
     const amountInCents = Math.round(amount);
     
-    // Validate minimum amount for production (Transbank requires minimum 100 CLP)
-    if (TRANSBANK_ENVIRONMENT === Environment.Production && amountInCents < 100) {
-      return NextResponse.json(
-        { error: 'El monto mínimo para pagos en producción es $100 CLP' },
-        { status: 400 }
-      );
-    }
+    // Note: Transbank may have minimum amounts, but we'll let Transbank handle the validation
+    // to provide more specific error messages
     
     // Add timeout wrapper for the create call
     const createPromise = transaction.create(
@@ -142,17 +116,6 @@ export async function POST(request: NextRequest) {
     });
     
     const response = await Promise.race([createPromise, timeoutPromise]) as any;
-
-    // Log response without exposing full token
-    // Log the actual URL to verify it's correct (URLs are safe to log)
-    const safeResponse = {
-      token: response.token ? response.token.substring(0, 10) + '...' : null,
-      url: response.url || null, // Log actual URL to verify it's correct
-      hasToken: !!response.token,
-      hasUrl: !!response.url,
-      fullResponseKeys: Object.keys(response || {}),
-    };
-    console.log('Transbank response received:', safeResponse);
 
     if (!response) {
       return NextResponse.json(
@@ -225,48 +188,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Order updated successfully with Transbank info:', {
-      orderId: orderId.substring(0, 8) + '...',
-      buyOrder,
-      tokenSet: !!token,
-      rowsUpdated: updateData.length,
-      updatedOrder: {
-        id: updateData[0].id?.substring(0, 8) + '...',
-        status: updateData[0].status,
-        hasToken: !!updateData[0].transbank_token,
-        hasBuyOrder: !!updateData[0].transbank_buy_order,
-        buyOrderValue: updateData[0].transbank_buy_order,
-        tokenPrefix: updateData[0].transbank_token ? updateData[0].transbank_token.substring(0, 10) + '...' : null,
-      },
-    });
+    // Verify the update was actually saved by reading it back (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      const { data: verifyData, error: verifyError } = await supabaseAdmin
+        .from('orders')
+        .select('id, transbank_token, transbank_buy_order, status')
+        .eq('id', orderId)
+        .single();
 
-    // Verify the update was actually saved by reading it back
-    const { data: verifyData, error: verifyError } = await supabaseAdmin
-      .from('orders')
-      .select('id, transbank_token, transbank_buy_order, status')
-      .eq('id', orderId)
-      .single();
-
-    if (verifyError || !verifyData) {
-      console.error('CRITICAL: Could not verify order update:', {
-        error: verifyError,
-        orderId: orderId.substring(0, 8) + '...',
-      });
-      // Still return success to allow payment flow, but log the critical error
-    } else if (!verifyData.transbank_token || !verifyData.transbank_buy_order) {
-      console.error('CRITICAL: Order update verification failed - fields not saved:', {
-        orderId: orderId.substring(0, 8) + '...',
-        hasToken: !!verifyData.transbank_token,
-        hasBuyOrder: !!verifyData.transbank_buy_order,
-        status: verifyData.status,
-      });
-      // Still return success to allow payment flow, but log the critical error
-    } else {
-      console.log('Order update verified successfully:', {
-        orderId: orderId.substring(0, 8) + '...',
-        buyOrder: verifyData.transbank_buy_order,
-        tokenPrefix: verifyData.transbank_token.substring(0, 10) + '...',
-      });
+      if (verifyError || !verifyData || !verifyData.transbank_token || !verifyData.transbank_buy_order) {
+        console.error('CRITICAL: Order update verification failed:', {
+          error: verifyError,
+          orderId: orderId.substring(0, 8) + '...',
+          hasToken: !!verifyData?.transbank_token,
+          hasBuyOrder: !!verifyData?.transbank_buy_order,
+        });
+      }
     }
 
     return NextResponse.json({

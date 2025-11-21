@@ -40,19 +40,21 @@ export function getTransbankClient() {
     throw new Error('Transbank configuration is missing. Please set NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE and TRANSBANK_API_KEY environment variables.');
   }
 
-  // Log configuration without exposing full API key
-  const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
-  const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
-  
-  console.log('Transbank Configuration:', {
-    commerceCode: TRANSBANK_COMMERCE_CODE,
-    apiKeySet: !!TRANSBANK_API_KEY,
-    apiKeyPrefix,
-    environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
-    useIntegration,
-    nodeEnv: process.env.NODE_ENV,
-    isTestCommerceCode,
-  });
+  // Log configuration only in development
+  if (process.env.NODE_ENV === 'development') {
+    const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
+    const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
+    
+    console.log('Transbank Configuration:', {
+      commerceCode: TRANSBANK_COMMERCE_CODE,
+      apiKeySet: !!TRANSBANK_API_KEY,
+      apiKeyPrefix,
+      environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
+      useIntegration,
+      nodeEnv: process.env.NODE_ENV,
+      isTestCommerceCode,
+    });
+  }
   
   // Warn if using actual commerce code in integration - it might not support all payment methods
   if (useIntegration && !isTestCommerceCode) {
