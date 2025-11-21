@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
+import { getTransbankClient, getReturnUrls, TRANSBANK_ENVIRONMENT } from '@/lib/transbank';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { Environment } from 'transbank-sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -109,6 +110,14 @@ export async function POST(request: NextRequest) {
     // Transbank expects amount as integer (in cents/CLP)
     // Convert to integer if it's a decimal
     const amountInCents = Math.round(amount);
+    
+    // Validate minimum amount for production (Transbank requires minimum 100 CLP)
+    if (TRANSBANK_ENVIRONMENT === Environment.Production && amountInCents < 100) {
+      return NextResponse.json(
+        { error: 'El monto mínimo para pagos en producción es $100 CLP' },
+        { status: 400 }
+      );
+    }
     
     // Add timeout wrapper for the create call
     const createPromise = transaction.create(

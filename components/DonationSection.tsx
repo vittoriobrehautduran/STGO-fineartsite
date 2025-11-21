@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatCurrency } from "@/lib/currency";
 
-const PRESET_AMOUNTS = [5000, 10000, 20000, 50000]; // CLP amounts
+const PRESET_AMOUNTS = [1000, 5000, 10000, 50000]; // CLP amounts (minimum 1000 for production)
 
 export default function DonationSection() {
   const router = useRouter();
@@ -39,8 +39,9 @@ export default function DonationSection() {
 
     // Validate amount
     const amount = getDonationAmount();
-    if (amount < 50) {
-      setError("El monto mínimo de donación es $50 CLP");
+    // Transbank requires minimum 100 CLP in production
+    if (amount < 100) {
+      setError("El monto mínimo de donación es $100 CLP");
       return;
     }
 
@@ -198,7 +199,7 @@ export default function DonationSection() {
             {/* Donate Button */}
             <button
               onClick={handleDonate}
-              disabled={isProcessing || donationAmount < 50 || !customerName.trim() || !customerEmail.trim()}
+              disabled={isProcessing || donationAmount < 100 || !customerName.trim() || !customerEmail.trim()}
               className="w-full px-6 py-4 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {isProcessing ? (
