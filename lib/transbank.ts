@@ -40,10 +40,11 @@ export function getTransbankClient() {
     throw new Error('Transbank configuration is missing. Please set NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE and TRANSBANK_API_KEY environment variables.');
   }
 
+  const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
+
   // Log configuration only in development
   if (process.env.NODE_ENV === 'development') {
     const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
-    const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
     
     console.log('Transbank Configuration:', {
       commerceCode: TRANSBANK_COMMERCE_CODE,
