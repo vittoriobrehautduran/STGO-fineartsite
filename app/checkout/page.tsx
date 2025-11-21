@@ -184,7 +184,11 @@ function CheckoutContent() {
             </h1>
             <p className="text-gray-600">
               {order?.status === 'paid' 
-                ? 'Tu pago ha sido procesado exitosamente. Te contactaremos pronto para coordinar la entrega.'
+                ? order?.special_requests === 'Donación'
+                  ? '¡Gracias por tu donación! Tu apoyo nos ayuda a seguir creando arte de calidad.'
+                  : 'Tu pago ha sido procesado exitosamente. Te contactaremos pronto para coordinar la entrega.'
+                : order?.special_requests === 'Donación'
+                ? 'Completa tu donación de forma segura con Transbank.'
                 : 'Completa el pago de tu pedido de forma segura con Transbank.'}
             </p>
             {order && (

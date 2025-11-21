@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify order exists and validate amount matches
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*')
       .eq('id', orderId)
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
 
     // Update order with Transbank transaction info
     // This is critical - if this fails, the commit won't be able to find the order
-    const { error: updateError, data: updateData } = await supabase
+    const { error: updateError, data: updateData } = await supabaseAdmin
       .from('orders')
       .update({
         transbank_token: token,
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Verify the update was actually saved by reading it back
-    const { data: verifyData, error: verifyError } = await supabase
+    const { data: verifyData, error: verifyError } = await supabaseAdmin
       .from('orders')
       .select('id, transbank_token, transbank_buy_order, status')
       .eq('id', orderId)

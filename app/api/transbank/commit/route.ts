@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient } from '@/lib/transbank';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     // First: try to find by order_id if provided (most reliable)
     if (order_id) {
       console.log('Looking for order by provided order_id:', order_id.substring(0, 8) + '...');
-      const { data: orderById, error: idError } = await supabase
+      const { data: orderById, error: idError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_buy_order, transbank_token, total_amount, status')
         .eq('id', order_id)
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     if (!orderData && token_ws) {
       const tokenPrefix = token_ws.substring(0, 10) + '...';
       console.log('Looking for order by token_ws:', tokenPrefix);
-      const { data: orderByToken, error: tokenError } = await supabase
+      const { data: orderByToken, error: tokenError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_token, transbank_buy_order, total_amount, status')
         .eq('transbank_token', token_ws)
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     // Third: try to find by buy_order as last resort
     if (!orderData && buyOrder) {
       console.log('Looking for order by buy_order:', buyOrder);
-      const { data: orderByBuyOrder, error: buyOrderError } = await supabase
+      const { data: orderByBuyOrder, error: buyOrderError } = await supabaseAdmin
         .from('orders')
         .select('id, transbank_buy_order, transbank_token, total_amount, status')
         .eq('transbank_buy_order', buyOrder)
@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
       // Try one more time with full order_id (not truncated) to see if it exists
       let fullOrderCheck = null;
       if (order_id) {
-        const { data: fullOrder } = await supabase
+        const { data: fullOrder } = await supabaseAdmin
           .from('orders')
           .select('id, status, transbank_token, transbank_buy_order')
           .eq('id', order_id)
@@ -254,12 +254,27 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    // Extract card number from various possible response structures
+    const cardNumber = response.card_detail?.card_number || 
+                       response.card_number || 
+                       (response.card_detail && typeof response.card_detail === 'string' ? response.card_detail : null) ||
+                       null;
+    
+    // Extract installments from various possible response structures
+    const installments = response.installments_number || 
+                         response.installments || 
+                         response.installment_amount ? 1 : null; // If installment_amount exists, it's at least 1 installment
+    
     const updateData: any = {
       status: orderStatus,
       transbank_response_code: response.response_code,
       transbank_status: response.status,
       transbank_authorization_code: response.authorization_code || null,
       transbank_payment_date: response.transaction_date || null,
+      // Store additional transaction details for display
+      transbank_card_number: cardNumber, // Last 4 digits
+      transbank_installments: installments,
+      transbank_payment_type: response.payment_type_code || null, // VD, VP, or VN
     };
 
     // Update token if not set
@@ -276,7 +291,7 @@ export async function POST(request: NextRequest) {
       updateData.paid_at = new Date().toISOString();
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('orders')
       .update(updateData)
       .eq('id', orderId);
