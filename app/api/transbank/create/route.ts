@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
         transbank_token: token,
         transbank_buy_order: buyOrder,
         transbank_session_id: sessionId,
-        status: 'pending_payment',
+        status: 'pending', // Using 'pending' to match database constraint
       })
       .eq('id', orderId)
       .select();
