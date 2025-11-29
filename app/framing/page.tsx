@@ -239,10 +239,10 @@ export default function FramingPage() {
               ref={titleRef}
               className="text-4xl sm:text-5xl md:text-6xl font-bold text-center mb-6 text-gray-900 tracking-tight"
             >
-              Servicios de Enmarcado
+              Servicios de Enmarcado Profesional en Chile
             </h1>
             <p className="text-gray-600 text-xl sm:text-2xl font-light max-w-3xl mx-auto leading-relaxed">
-              Ofrecemos enmarcado profesional de alta calidad para preservar y
+              Ofrecemos enmarcado profesional de alta calidad en Santiago, Chile, para preservar y
               realzar tus obras de arte. Cada marco es cuidadosamente seleccionado
               para complementar y proteger tu pieza única.
             </p>

@@ -7,6 +7,7 @@ import { createPortal } from "react-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/currency";
+import { useToast } from "@/contexts/ToastContext";
 
 interface ProductCardProps {
   product: Product;
@@ -19,6 +20,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [mounted, setMounted] = useState(false);
   const { addToCart } = useCart();
   const router = useRouter();
+  const { showError, showSuccess } = useToast();
 
   useEffect(() => {
     setMounted(true);
@@ -51,7 +53,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Por favor selecciona un tamaño");
+      showError("Por favor selecciona un tamaño");
       return;
     }
 
@@ -61,7 +63,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     );
 
     if (!selectedSizeObj) {
-      alert("Error: Tamaño no encontrado");
+      showError("Error: Tamaño no encontrado");
       return;
     }
 
@@ -87,7 +89,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     handleCloseModal();
     
     // Show success message
-    alert("Producto agregado al carrito");
+    showSuccess("Producto agregado al carrito");
   };
 
   const handleBackdropClick = () => {
@@ -115,7 +117,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           >
             <Image
               src={product.image}
-              alt={product.name}
+              alt={`${product.name} - Arte decorativo impresión fine art Chile`}
               fill
               className="object-cover"
             />
@@ -186,7 +188,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               <div className="relative aspect-[3/4] md:sticky md:top-0">
                 <Image
                   src={product.image}
-                  alt={product.name}
+                  alt={`${product.name} - Impresión fine art profesional Chile`}
                   fill
                   className="object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
                 />

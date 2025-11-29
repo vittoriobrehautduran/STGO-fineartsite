@@ -156,7 +156,7 @@ export default function FeaturedProducts() {
                   <div className="relative aspect-[3/4] mb-5 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
                     <Image
                       src={product.image}
-                      alt={product.name}
+                      alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
                       width={320}
                       height={427}
                       className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"

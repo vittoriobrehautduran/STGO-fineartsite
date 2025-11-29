@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.netlify.app'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.com'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

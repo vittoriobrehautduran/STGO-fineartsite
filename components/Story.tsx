@@ -61,10 +61,10 @@ export default function Story() {
         <div className="space-y-6 sm:space-y-8 text-lg sm:text-xl md:text-2xl text-gray-700 leading-relaxed">
           <p>
             En STGO Fine Art, nos especializamos en transformar tus momentos más
-            preciados en impresiones impresionantes de calidad museo. Utilizando
+            preciados en impresiones impresionantes de calidad museo en Chile. Utilizando
             tecnología de impresión de alta resolución de última generación,
             damos vida a cada detalle con una claridad y precisión de color
-            inigualables.
+            inigualables. Somos una imprenta profesional especializada en arte fine art.
           </p>
           <p>
             Nuestro compromiso va más allá de la impresión. Ofrecemos servicios
