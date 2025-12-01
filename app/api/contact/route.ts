@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Mailgun API configuration
+// Get API key and domain from environment variables
+// Domain can be sandbox (sandboxXXXXX.mailgun.org) or custom verified domain
 const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
 const MAILGUN_BASE_URL = process.env.MAILGUN_BASE_URL || "https://api.mailgun.net";
@@ -10,9 +12,12 @@ export async function POST(request: NextRequest) {
   try {
     // Validate environment variables
     if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN) {
-      console.error("Missing Mailgun configuration");
+      console.error("Missing Mailgun configuration:", {
+        hasApiKey: !!MAILGUN_API_KEY,
+        hasDomain: !!MAILGUN_DOMAIN,
+      });
       return NextResponse.json(
-        { error: "Email service is not configured" },
+        { error: "Email service is not configured. Please check Mailgun settings." },
         { status: 500 }
       );
     }
