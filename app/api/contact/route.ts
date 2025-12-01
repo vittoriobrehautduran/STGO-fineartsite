@@ -51,12 +51,21 @@ Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.
     `.trim();
 
     // Send email via Mailgun
+    // Note: For sandbox domains, recipient email must be added to authorized recipients in Mailgun dashboard
     const formData = new URLSearchParams();
     formData.append("from", `STGO Fine Art Contact <noreply@${MAILGUN_DOMAIN}>`);
     formData.append("to", RECIPIENT_EMAIL);
     formData.append("subject", `Contacto: ${subjectText}`);
     formData.append("text", emailBody);
     formData.append("reply-to", email);
+    
+    // Log request details (without sensitive data) for debugging
+    console.log("Sending email via Mailgun:", {
+      domain: MAILGUN_DOMAIN,
+      to: RECIPIENT_EMAIL,
+      from: `noreply@${MAILGUN_DOMAIN}`,
+      subject: `Contacto: ${subjectText}`,
+    });
 
     const response = await fetch(
       `${MAILGUN_BASE_URL}/v3/${MAILGUN_DOMAIN}/messages`,
@@ -72,9 +81,31 @@ Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Mailgun API error:", errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { message: errorText };
+      }
+      
+      console.error("Mailgun API error:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        domain: MAILGUN_DOMAIN,
+        hasApiKey: !!MAILGUN_API_KEY,
+      });
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to send email. Please try again later.";
+      if (response.status === 401 || response.status === 403) {
+        errorMessage = "Authentication failed. Please check Mailgun API key and domain configuration.";
+      } else if (response.status === 400 && errorData?.message?.includes("authorized")) {
+        errorMessage = "Email address not authorized. For sandbox domains, recipient must be added to authorized recipients in Mailgun dashboard.";
+      }
+      
       return NextResponse.json(
-        { error: "Failed to send email. Please try again later." },
+        { error: errorMessage },
         { status: 500 }
       );
     }
