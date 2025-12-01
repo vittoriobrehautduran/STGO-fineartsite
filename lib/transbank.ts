@@ -21,7 +21,7 @@ const useIntegration = isExplicitIntegration ||
 // In production, these should be set via environment variables
 // IMPORTANT: For integration testing, use the test commerce code (597055555532) 
 // which supports all payment methods (credit, debit, prepago)
-// Your actual commerce code (53027170) might be configured only for credit cards
+// Production commerce code: 597053027170
 export const TRANSBANK_COMMERCE_CODE = process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 
   (process.env.NODE_ENV === 'production' ? undefined : DEFAULT_TEST_COMMERCE_CODE);
 
@@ -40,19 +40,22 @@ export function getTransbankClient() {
     throw new Error('Transbank configuration is missing. Please set NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE and TRANSBANK_API_KEY environment variables.');
   }
 
-  // Log configuration without exposing full API key
-  const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
   const isTestCommerceCode = TRANSBANK_COMMERCE_CODE === DEFAULT_TEST_COMMERCE_CODE;
-  
-  console.log('Transbank Configuration:', {
-    commerceCode: TRANSBANK_COMMERCE_CODE,
-    apiKeySet: !!TRANSBANK_API_KEY,
-    apiKeyPrefix,
-    environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
-    useIntegration,
-    nodeEnv: process.env.NODE_ENV,
-    isTestCommerceCode,
-  });
+
+  // Log configuration only in development
+  if (process.env.NODE_ENV === 'development') {
+    const apiKeyPrefix = TRANSBANK_API_KEY ? TRANSBANK_API_KEY.substring(0, 10) + '...' : 'not set';
+    
+    console.log('Transbank Configuration:', {
+      commerceCode: TRANSBANK_COMMERCE_CODE,
+      apiKeySet: !!TRANSBANK_API_KEY,
+      apiKeyPrefix,
+      environment: TRANSBANK_ENVIRONMENT === Environment.Integration ? 'Integration' : 'Production',
+      useIntegration,
+      nodeEnv: process.env.NODE_ENV,
+      isTestCommerceCode,
+    });
+  }
   
   // Warn if using actual commerce code in integration - it might not support all payment methods
   if (useIntegration && !isTestCommerceCode) {
@@ -76,7 +79,8 @@ export function getTransbankClient() {
 
 // Generate return URLs
 export function getReturnUrls(orderId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.netlify.app';
+  // Use the actual production domain
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.com';
   
   return {
     returnUrl: `${baseUrl}/checkout/success?order_id=${orderId}`,

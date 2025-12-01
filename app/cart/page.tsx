@@ -154,49 +154,54 @@ export default function CartPage() {
               {cartItems.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-lg shadow-lg p-6 flex gap-6"
+                  className="bg-white rounded-lg shadow-lg p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
                 >
-                  <div className="relative w-24 h-32 flex-shrink-0">
-                    <Image
+                  <div className="flex-shrink-0">
+                    <img
                       src={item.productImage}
                       alt={item.productName}
-                      fill
-                      className="object-cover rounded-lg"
+                      className="rounded-lg"
+                      style={{ 
+                        maxHeight: '300px',
+                        width: 'auto',
+                        height: 'auto',
+                        display: 'block'
+                      }}
                     />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 break-words">
                       {item.productName}
                     </h3>
-                    <p className="text-gray-600 mb-2">
+                    <p className="text-sm sm:text-base text-gray-600 mb-2 break-words">
                       Tamaño: {item.size.width} × {item.size.height} {item.size.unit}
                     </p>
                     {item.framingName && (
-                      <p className="text-gray-600 mb-2">
-                        Enmarcado: {item.framingName}
+                      <p className="text-sm sm:text-base text-gray-600 mb-2 break-words">
+                        Enmarcado: <span className="whitespace-normal">{item.framingName}</span>
                       </p>
                     )}
-                    <div className="flex items-center justify-between mt-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mt-4">
                       <div className="flex items-center gap-3">
-                        <label className="text-sm text-gray-600">Cantidad:</label>
+                        <label className="text-sm text-gray-600 whitespace-nowrap">Cantidad:</label>
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(index, item.quantity - 1)}
-                            className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
+                            className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center flex-shrink-0"
                           >
                             −
                           </button>
                           <span className="w-8 text-center">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(index, item.quantity + 1)}
-                            className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
+                            className="w-8 h-8 rounded border border-gray-300 hover:bg-gray-100 flex items-center justify-center flex-shrink-0"
                           >
                             +
                           </button>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
+                      <div className="text-left sm:text-right">
+                        <p className="text-base sm:text-lg font-bold text-gray-900 break-words">
                           {formatCurrency(item.totalPrice)}
                         </p>
                       </div>

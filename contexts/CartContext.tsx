@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 
 export interface CartItem {
   productId: string;
@@ -24,12 +24,15 @@ interface CartContextType {
   clearCart: () => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
+  onItemAdded: (callback: () => void) => () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const itemAddedCallbacks = useRef<Set<() => void>>(new Set());
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -41,15 +44,28 @@ export function CartProvider({ children }: { children: ReactNode }) {
         console.error("Error loading cart from localStorage:", error);
       }
     }
+    setIsInitialized(true);
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (isInitialized) {
+      localStorage.setItem("cart", JSON.stringify(cartItems));
+    }
+  }, [cartItems, isInitialized]);
 
   const addToCart = (item: CartItem) => {
     setCartItems((prev) => [...prev, item]);
+    // Notify all listeners that an item was added
+    itemAddedCallbacks.current.forEach((callback) => callback());
+  };
+
+  const onItemAdded = (callback: () => void) => {
+    itemAddedCallbacks.current.add(callback);
+    // Return unsubscribe function
+    return () => {
+      itemAddedCallbacks.current.delete(callback);
+    };
   };
 
   const removeFromCart = (index: number) => {
@@ -91,6 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         getTotalPrice,
         getTotalItems,
+        onItemAdded,
       }}
     >
       {children}

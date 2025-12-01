@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTransbankClient, getReturnUrls } from '@/lib/transbank';
-import { supabase } from '@/lib/supabase';
+import { getTransbankClient, getReturnUrls, TRANSBANK_ENVIRONMENT } from '@/lib/transbank';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import { Environment } from 'transbank-sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,13 +15,46 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify order exists and validate amount matches
-    const { data: order, error: orderError } = await supabase
+    const supabaseAdmin = getSupabaseAdmin();
+    
+    const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .select('*')
       .eq('id', orderId)
       .single();
 
-    if (orderError || !order) {
+    if (orderError) {
+      console.error('Error fetching order:', {
+        error: orderError,
+        code: orderError.code,
+        message: orderError.message,
+        details: orderError.details,
+        hint: orderError.hint,
+        orderId: orderId,
+      });
+      
+      // Check if it's an authentication error
+      if (orderError.message?.includes('Invalid API key') || orderError.code === 'PGRST301') {
+        return NextResponse.json(
+          { 
+            error: 'Configuration error: Invalid Supabase service role key. Please check SUPABASE_SERVICE_ROLE_KEY in Netlify environment variables.',
+            details: 'The service role key is required for API routes to access orders.'
+          },
+          { status: 500 }
+        );
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Order not found',
+          details: process.env.NODE_ENV === 'development' ? orderError.message : 'Order may not exist or there is a permissions issue'
+        },
+        { status: 404 }
+      );
+    }
+
+    if (!order) {
+      console.error('Order query returned no data:', { orderId: orderId?.substring(0, 8) + '...' });
       return NextResponse.json(
         { error: 'Order not found' },
         { status: 404 }
@@ -63,36 +97,25 @@ export async function POST(request: NextRequest) {
     const buyOrder = `ORD-${shortId}-${timestamp}`.substring(0, 26);
     const sessionId = orderId.substring(0, 61); // Max 61 characters
     
-    // Log transaction creation without sensitive data
-    console.log('Creating Transbank transaction:', {
-      buyOrder,
-      amount,
-      orderId: orderId.substring(0, 8) + '...',
-      commerceCode: process.env.NEXT_PUBLIC_TRANSBANK_COMMERCE_CODE || 'using default test code',
-      environment: process.env.TRANSBANK_ENV || process.env.NODE_ENV,
-    });
-    
     // Transbank expects amount as integer (in cents/CLP)
     // Convert to integer if it's a decimal
     const amountInCents = Math.round(amount);
     
-    const response = await transaction.create(
+    // Note: Transbank may have minimum amounts, but we'll let Transbank handle the validation
+    // to provide more specific error messages
+    
+    // Add timeout wrapper for the create call
+    const createPromise = transaction.create(
       buyOrder,
       sessionId,
       amountInCents,
       returnUrls.returnUrl
     );
-
-    // Log response without exposing full token
-    // Log the actual URL to verify it's correct (URLs are safe to log)
-    const safeResponse = {
-      token: response.token ? response.token.substring(0, 10) + '...' : null,
-      url: response.url || null, // Log actual URL to verify it's correct
-      hasToken: !!response.token,
-      hasUrl: !!response.url,
-      fullResponseKeys: Object.keys(response || {}),
-    };
-    console.log('Transbank response received:', safeResponse);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout: Transbank no respondió en 30 segundos')), 30000);
+    });
+    
+    const response = await Promise.race([createPromise, timeoutPromise]) as any;
 
     if (!response) {
       return NextResponse.json(
@@ -121,27 +144,66 @@ export async function POST(request: NextRequest) {
     }
 
     // Update order with Transbank transaction info
-    const { error: updateError, data: updateData } = await supabase
+    // This is critical - if this fails, the commit won't be able to find the order
+    const { error: updateError, data: updateData } = await supabaseAdmin
       .from('orders')
       .update({
         transbank_token: token,
         transbank_buy_order: buyOrder,
         transbank_session_id: sessionId,
-        status: 'pending_payment',
+        status: 'pending', // Using 'pending' to match database constraint
       })
       .eq('id', orderId)
       .select();
 
     if (updateError) {
-      console.error('Error updating order with Transbank info:', updateError);
-      // Don't fail the request, but log the error
-    } else {
-      console.log('Order updated successfully with Transbank info:', {
+      console.error('CRITICAL: Error updating order with Transbank info:', {
+        error: updateError,
+        code: updateError.code,
+        message: updateError.message,
+        details: updateError.details,
+        hint: updateError.hint,
+        orderId: orderId.substring(0, 8) + '...',
+      });
+      // This is critical - return error so we know the update failed
+      return NextResponse.json(
+        { 
+          error: 'Failed to save payment information. Please try again.',
+          details: process.env.NODE_ENV === 'development' ? updateError.message : undefined
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!updateData || updateData.length === 0) {
+      console.error('CRITICAL: Order update returned no rows. Order may not exist or RLS is blocking update:', {
         orderId: orderId.substring(0, 8) + '...',
         buyOrder,
-        tokenSet: !!token,
-        rowsUpdated: updateData?.length || 0,
       });
+      return NextResponse.json(
+        { 
+          error: 'Failed to update order. The order may not exist or there may be a permissions issue.',
+        },
+        { status: 500 }
+      );
+    }
+
+    // Verify the update was actually saved by reading it back (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      const { data: verifyData, error: verifyError } = await supabaseAdmin
+        .from('orders')
+        .select('id, transbank_token, transbank_buy_order, status')
+        .eq('id', orderId)
+        .single();
+
+      if (verifyError || !verifyData || !verifyData.transbank_token || !verifyData.transbank_buy_order) {
+        console.error('CRITICAL: Order update verification failed:', {
+          error: verifyError,
+          orderId: orderId.substring(0, 8) + '...',
+          hasToken: !!verifyData?.transbank_token,
+          hasBuyOrder: !!verifyData?.transbank_buy_order,
+        });
+      }
     }
 
     return NextResponse.json({

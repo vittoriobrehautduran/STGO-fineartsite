@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/contexts/CartContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,28 +21,51 @@ export const metadata: Metadata = {
     default: "STGO Fine Art | Impresión y Enmarcado Profesional de Arte",
     template: "%s | STGO Fine Art",
   },
-  description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte, impresión fine art, enramado y marcos personalizados.",
+    description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte en Chile, impresión fine art, enramado y marcos personalizados en Santiago.",
   keywords: [
     "fine art",
     "arte",
     "arts",
     "imprenta",
+    "imprenta chile",
+    "imprenta santiago",
+    "imprenta profesional chile",
+    "imprenta arte chile",
     "impresión",
+    "impresión chile",
+    "impresión santiago",
+    "impresión profesional chile",
+    "impresión fine art chile",
     "impresion",
     "enramado",
+    "enramado chile",
+    "enramado santiago",
     "enmarcado",
+    "enmarcado chile",
+    "enmarcado santiago",
+    "enmarcado profesional chile",
     "marcos",
+    "marcos chile",
+    "marcos personalizados chile",
     "fotografía artística",
+    "fotografía artística chile",
     "arte fino",
     "impresión profesional",
     "enmarcado profesional",
     "impresión fine art",
     "arte decorativo",
+    "arte decorativo chile",
     "fotografía de alta resolución",
     "impresión en canvas",
+    "impresión canvas chile",
     "marcos personalizados",
     "arte para decoración",
     "impresión museo",
+    "impresión museo chile",
+    "imprenta fine art",
+    "imprenta fine art chile",
+    "servicios imprenta chile",
+    "impresión profesional santiago",
   ],
   authors: [{ name: "STGO Fine Art" }],
   creator: "STGO Fine Art",
@@ -65,7 +89,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "STGO Fine Art",
     title: "STGO Fine Art | Impresión y Enmarcado Profesional de Arte",
-    description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte.",
+    description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte en Chile.",
     images: [
       {
         url: "/images/heroimg.jpg",
@@ -78,7 +102,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "STGO Fine Art | Impresión y Enmarcado Profesional de Arte",
-    description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación.",
+    description: "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte en Chile.",
     images: ["/images/heroimg.jpg"],
   },
   robots: {
@@ -125,7 +149,7 @@ export default function RootLayout({
     "name": "STGO Fine Art",
     "url": siteUrl,
     "logo": `${siteUrl}/images/logowhite.png`,
-    "description": "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación",
+    "description": "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte en Chile.",
     "sameAs": [],
     "contactPoint": {
       "@type": "ContactPoint",
@@ -138,19 +162,51 @@ export default function RootLayout({
     }
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inicio",
+        "item": siteUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Colección",
+        "item": `${siteUrl}/collection`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": "Enmarcado",
+        "item": `${siteUrl}/framing`
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "name": "Contacto",
+        "item": `${siteUrl}/contact`
+      }
+    ]
+  };
+
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     "@id": `${siteUrl}#organization`,
     "name": "STGO Fine Art",
     "image": `${siteUrl}/images/heroimg.jpg`,
-    "description": "Servicios profesionales de impresión fine art, enmarcado y fotografía artística de alta resolución",
+    "description": "Servicios profesionales de impresión fine art, enmarcado y fotografía artística de alta resolución en Chile. Imprenta profesional en Santiago.",
     "url": siteUrl,
     "telephone": "",
     "priceRange": "CLP",
     "address": {
       "@type": "PostalAddress",
-      "addressCountry": "CL"
+      "addressCountry": "CL",
+      "addressLocality": "Santiago"
     },
     "geo": {
       "@type": "GeoCoordinates"
@@ -174,7 +230,12 @@ export default function RootLayout({
           "itemOffered": {
             "@type": "Service",
             "name": "Impresión Fine Art",
-            "description": "Impresión profesional de arte de alta calidad"
+            "description": "Impresión profesional de arte de alta calidad en Chile. Imprenta especializada en fine art, canvas y papel museo.",
+            "serviceType": "Impresión Fine Art",
+            "areaServed": {
+              "@type": "Country",
+              "name": "Chile"
+            }
           }
         },
         {
@@ -182,7 +243,12 @@ export default function RootLayout({
           "itemOffered": {
             "@type": "Service",
             "name": "Enmarcado Profesional",
-            "description": "Servicios de enmarcado y enramado profesional"
+            "description": "Servicios de enmarcado y enramado profesional en Santiago, Chile. Marcos personalizados para obras de arte.",
+            "serviceType": "Enmarcado Profesional",
+            "areaServed": {
+              "@type": "Country",
+              "name": "Chile"
+            }
           }
         },
         {
@@ -190,11 +256,26 @@ export default function RootLayout({
           "itemOffered": {
             "@type": "Service",
             "name": "Fotografía Artística",
-            "description": "Fotografía de arte fino de alta resolución"
+            "description": "Fotografía de arte fino de alta resolución. Imprenta de arte decorativo en Chile.",
+            "serviceType": "Fotografía Artística",
+            "areaServed": {
+              "@type": "Country",
+              "name": "Chile"
+            }
           }
         }
       ]
-    }
+    },
+    "makesOffer": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Imprenta Profesional Chile",
+          "description": "Imprenta especializada en impresión fine art, enmarcado y servicios de arte en Santiago, Chile"
+        }
+      }
+    ]
   };
 
   return (
@@ -208,9 +289,15 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
       </head>
       <body>
-        <CartProvider>{children}</CartProvider>
+        <ToastProvider>
+          <CartProvider>{children}</CartProvider>
+        </ToastProvider>
       </body>
     </html>
   );

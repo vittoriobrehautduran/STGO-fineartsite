@@ -9,6 +9,7 @@ import Process from "@/components/Process";
 import TrustIndicators from "@/components/TrustIndicators";
 import UploadSection from "@/components/UploadSection";
 import Story from "@/components/Story";
+import DonationSection from "@/components/DonationSection";
 import Footer from "@/components/Footer";
 import LoadingScreen from "@/components/LoadingScreen";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -97,6 +98,7 @@ export default function Home() {
             <Process />
             <TrustIndicators />
             <Story />
+            <DonationSection />
             <Footer />
           </>
         )}

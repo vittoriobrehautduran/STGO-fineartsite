@@ -7,7 +7,7 @@ Disallow: /checkout/success
 Disallow: /policies
 
 # Sitemap
-Sitemap: https://stgofineart.netlify.app/sitemap.xml
+Sitemap: https://stgofineart.com/sitemap.xml
 
 # Crawl-delay
 Crawl-delay: 1

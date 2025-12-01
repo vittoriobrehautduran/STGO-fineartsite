@@ -124,7 +124,7 @@ export default function Hero() {
       >
         <Image
           src="/images/heroimg4.jpg"
-          alt="STGO Fine Art Hero"
+          alt="STGO Fine Art - Imprenta profesional de arte fine art y enmarcado en Chile"
           fill
           priority
           className="object-cover"
@@ -153,7 +153,7 @@ export default function Hero() {
             <SplittingText text="STGO FINE ART" delay={300} />
           </h1>
           <p className="text-white text-sm sm:text-base md:text-xl lg:text-2xl xl:text-3xl font-light tracking-[0.15em] uppercase opacity-95 px-2">
-            Estudio de impresión Fine Art y enmarcado
+            Estudio de impresión Fine Art y enmarcado en Chile
           </p>
         </div>
       </div>

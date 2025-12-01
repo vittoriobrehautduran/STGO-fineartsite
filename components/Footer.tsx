@@ -1,45 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Link from "next/link";
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const footerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const footer = footerRef.current;
-    if (!footer) return;
-
-    // Fade in footer
-    const footerAnimation = gsap.fromTo(
-      footer,
-      { opacity: 0, y: 50 },
-      {
-        opacity: 1,
-        y: 0,
-        duration: 1,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: footer,
-          start: "top 85%",
-          toggleActions: "play none none none",
-          id: "footer-fade",
-        },
-      }
-    );
-
-    const footerTrigger = ScrollTrigger.getById("footer-fade");
-
-    return () => {
-      if (footerTrigger) footerTrigger.kill();
-      if (footerAnimation) footerAnimation.kill();
-    };
-  }, []);
 
   const socialLinks = [
     {
@@ -99,7 +63,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer ref={footerRef} className="bg-gray-900 text-gray-300">
+    <footer className="bg-gray-900 text-gray-300">
       <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
           <div>

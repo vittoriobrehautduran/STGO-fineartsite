@@ -243,19 +243,102 @@ function CheckoutSuccessContent() {
                 : 'Tu pedido ha sido recibido y está siendo procesado. Te contactaremos pronto con los detalles.'}
             </p>
             {order && (
-              <div className="bg-gray-50 rounded-lg p-6 text-left space-y-2">
+              <div className="bg-gray-50 rounded-lg p-6 text-left space-y-3">
+                {/* Required: Order Number */}
                 <div className="flex justify-between">
                   <span className="text-gray-600">Número de Pedido:</span>
                   <span className="font-semibold text-gray-900">
                     {order.id.substring(0, 8)}
                   </span>
                 </div>
+                
+                {/* Required: Commerce Name */}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total:</span>
+                  <span className="text-gray-600">Comercio:</span>
                   <span className="font-semibold text-gray-900">
-                    {formatCurrency(order.total_amount)}
+                    STGO Fine Art
                   </span>
                 </div>
+                
+                {/* Required: Transaction Amount and Currency */}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Monto y Moneda:</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatCurrency(order.total_amount)} CLP
+                  </span>
+                </div>
+                
+                {/* Show transaction details only if payment was processed */}
+                {paymentStatus === 'success' && order.transbank_authorization_code && (
+                  <>
+                    {/* Required: Authorization Code */}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Código de Autorización:</span>
+                      <span className="font-semibold text-gray-900">
+                        {order.transbank_authorization_code}
+                      </span>
+                    </div>
+                    
+                    {/* Required: Transaction Date */}
+                    {order.transbank_payment_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Fecha de la Transacción:</span>
+                        <span className="font-semibold text-gray-900">
+                          {new Date(order.transbank_payment_date).toLocaleString('es-CL', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Required: Payment Type (Debit or Credit) */}
+                    {order.transbank_payment_type && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tipo de Pago:</span>
+                        <span className="font-semibold text-gray-900">
+                          {order.transbank_payment_type === 'VD' ? 'Débito' :
+                           order.transbank_payment_type === 'VP' ? 'Prepago' :
+                           order.transbank_payment_type === 'VN' ? 'Crédito' :
+                           order.transbank_payment_type}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Required: Number of Installments */}
+                    {order.transbank_installments && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Cantidad de Cuotas:</span>
+                        <span className="font-semibold text-gray-900">
+                          {order.transbank_installments}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Required: Last 4 digits of card */}
+                    {order.transbank_card_number && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Últimos 4 dígitos de la tarjeta:</span>
+                        <span className="font-semibold text-gray-900">
+                          ****{order.transbank_card_number}
+                        </span>
+                      </div>
+                    )}
+                  </>
+                )}
+                
+                {/* Required: Description of goods/services */}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Descripción:</span>
+                  <span className="font-semibold text-gray-900">
+                    {order.special_requests === 'Donación' ? 'Donación' : 'Impresión de arte personalizada'}
+                  </span>
+                </div>
+                
+                {/* Status */}
                 {order.status !== "pending" && order.status !== "pending_payment" && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Estado:</span>
@@ -265,11 +348,28 @@ function CheckoutSuccessContent() {
                       "text-gray-600"
                     }`}>
                       {order.status === "paid" ? "Completado" : 
-                       order.status === "payment_failed" ? "Procesando" :
+                       order.status === "payment_failed" ? "Rechazado" :
                        "Procesando"}
                     </span>
                   </div>
                 )}
+              </div>
+            )}
+            
+            {/* Required: Error message for rejected transactions */}
+            {paymentStatus === 'failed' && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-left">
+                <h3 className="font-semibold text-red-900 mb-3">
+                  Orden de Compra {order?.id?.substring(0, 8) || ''} rechazada
+                </h3>
+                <p className="text-sm text-red-800 mb-2">
+                  Las posibles causas de este rechazo son:
+                </p>
+                <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                  <li>Error en el ingreso de los datos de su tarjeta de crédito o débito (fecha y/o código de seguridad).</li>
+                  <li>Su tarjeta de crédito o débito no cuenta con saldo suficiente.</li>
+                  <li>Tarjeta aún no habilitada en el sistema financiero.</li>
+                </ul>
               </div>
             )}
             <p className="text-sm text-gray-500">

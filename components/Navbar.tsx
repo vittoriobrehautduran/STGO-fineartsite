@@ -3,220 +3,56 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCart } from "@/contexts/CartContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
-  const [isBrightBackground, setIsBrightBackground] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPastHero, setIsPastHero] = useState(false);
+  const [isCartAnimating, setIsCartAnimating] = useState(false);
   const isHomePage = pathname === "/";
   const isCollectionPage = pathname === "/collection";
-  const { getTotalItems } = useCart();
+  const { getTotalItems, onItemAdded } = useCart();
   const cartItemCount = getTotalItems();
 
-  // Function to detect background brightness at logo position
-  const checkBackgroundBrightness = useCallback(() => {
-    try {
-      // Logo is fixed at top-left corner
-      const logoX = 20;
-      const logoY = 20;
-      
-      let backgroundColor = '';
-      
-      // Create a temporary element to check what's behind the logo
-      // Temporarily hide logo to see what's behind it
-      const logoLink = document.querySelector('a[href="/"]');
-      const logoLinkElement = logoLink as HTMLElement;
-      const originalDisplay = logoLinkElement?.style.display;
-      
-      if (logoLinkElement) {
-        logoLinkElement.style.display = 'none';
-      }
-      
-      // Get element at logo position
-      const elementAtPoint = document.elementFromPoint(logoX, logoY);
-      
-      // Restore logo visibility
-      if (logoLinkElement) {
-        logoLinkElement.style.display = originalDisplay || '';
-      }
-      
-      if (elementAtPoint) {
-        let current: HTMLElement | null = elementAtPoint as HTMLElement;
-        
-        // Walk up the DOM tree to find an element with a background color
-        let depth = 0;
-        while (current && depth < 10) {
-          const style = window.getComputedStyle(current);
-          const bg = style.backgroundColor;
-          
-          // Check if this element has a non-transparent background
-          if (bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent') {
-            // Check if it's actually a color (not just default)
-            const rgbMatch = bg.match(/\d+/g);
-            if (rgbMatch && rgbMatch.length >= 3) {
-              backgroundColor = bg;
-              break;
-            }
-          }
-          
-          // Check background color classes
-          const classList = current.classList;
-          if (classList) {
-            const classString = classList.toString();
-            // Check for common background color classes
-            if (classString.includes('bg-white') || classString.includes('bg-gray-50') || 
-                classString.includes('bg-stone-50') || classString.includes('bg-gray-100') ||
-                classString.includes('bg-gray-200')) {
-              backgroundColor = 'rgb(255, 255, 255)'; // White or light
-              break;
-            }
-            if (classString.includes('bg-black') || classString.includes('bg-gray-900')) {
-              backgroundColor = 'rgb(0, 0, 0)'; // Black or dark
-              break;
-            }
-          }
-          
-          current = current.parentElement;
-          depth++;
-        }
-      }
-      
-      // Fallback: check all sections to see which one contains the logo position
-      if (!backgroundColor || backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
-        const sections = document.querySelectorAll('section, main');
-        sections.forEach((section) => {
-          const rect = section.getBoundingClientRect();
-          // Check if logo position (in viewport) is within this section
-          if (logoX >= rect.left && logoX <= rect.right && 
-              logoY >= rect.top && logoY <= rect.bottom) {
-            const sectionStyle = window.getComputedStyle(section as HTMLElement);
-            const sectionBg = sectionStyle.backgroundColor;
-            const classList = (section as HTMLElement).classList;
-            
-            // Check background color
-            if (sectionBg && sectionBg !== 'rgba(0, 0, 0, 0)' && sectionBg !== 'transparent') {
-              const rgbMatch = sectionBg.match(/\d+/g);
-              if (rgbMatch && rgbMatch.length >= 3) {
-                backgroundColor = sectionBg;
-              }
-            }
-            
-            // Check for background classes
-            if (classList) {
-              const classString = classList.toString();
-              if (classString.includes('bg-white') || classString.includes('bg-gray-50') || 
-                  classString.includes('bg-stone-50') || classString.includes('bg-gray-100') ||
-                  classString.includes('bg-gray-200')) {
-                backgroundColor = 'rgb(255, 255, 255)';
-              } else if (classString.includes('bg-black') || classString.includes('bg-gray-900')) {
-                backgroundColor = 'rgb(0, 0, 0)';
-              }
-            }
-          }
-        });
-      }
-      
-      // Final fallback: check body background
-      if (!backgroundColor || backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
-        const bodyStyle = window.getComputedStyle(document.body);
-        const bodyBg = bodyStyle.backgroundColor;
-        if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') {
-          backgroundColor = bodyBg;
-        }
-      }
+  // Trigger animation only when an item is actually added to cart
+  useEffect(() => {
+    const unsubscribe = onItemAdded(() => {
+      setIsCartAnimating(true);
+      const timer = setTimeout(() => {
+        setIsCartAnimating(false);
+      }, 1000); // Animation duration - 1 second
+      return () => clearTimeout(timer);
+    });
 
-      // Parse RGB values
-      const rgbMatch = backgroundColor.match(/\d+/g);
-      if (!rgbMatch || rgbMatch.length < 3) {
-        // Default to dark background if can't detect
-        setIsBrightBackground(false);
-        return;
-      }
-
-      const r = parseInt(rgbMatch[0]);
-      const g = parseInt(rgbMatch[1]);
-      const b = parseInt(rgbMatch[2]);
-      
-      // Calculate brightness using relative luminance formula
-      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-      
-      // Consider background bright if luminance > 0.4 (lowered threshold for better detection)
-      const isBright = luminance > 0.4;
-      setIsBrightBackground(isBright);
-    } catch (error) {
-      console.error('Error checking background brightness:', error);
-      // Default to dark on error
-      setIsBrightBackground(false);
-    }
-  }, []);
+    return unsubscribe;
+  }, [onItemAdded]);
 
   useEffect(() => {
-    // Check background on initial load with multiple attempts
-    const checkInitial = () => {
-      // Multiple checks to ensure it works after page loads
-      setTimeout(() => checkBackgroundBrightness(), 100);
-      setTimeout(() => checkBackgroundBrightness(), 500);
-      setTimeout(() => checkBackgroundBrightness(), 1000);
-    };
-    checkInitial();
-
-    // Throttle function for scroll events
-    let ticking = false;
-    const throttledCheck = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          checkBackgroundBrightness();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
     if (isCollectionPage) {
-      // Collection page: hide when scrolled down, show only at top
-      const handleScroll = () => {
-        const currentScrollY = window.scrollY;
-        if (currentScrollY < 100) {
-          setIsVisible(true);
-        } else {
-          setIsVisible(false);
-        }
-        throttledCheck();
-      };
-
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      return () => window.removeEventListener("scroll", handleScroll);
+      // Collection page: always visible
+      setIsVisible(true);
     } else if (isHomePage) {
-      // Homepage: hide only when Featured Collection section is in view
+      // Homepage: always visible, but change color when navbar is over the next section
       const handleScroll = () => {
-        const featuredSection = document.querySelector(
-          'section[data-section="featured-collection"]'
-        );
-
-        if (!featuredSection) {
-          setIsVisible(true);
-          throttledCheck();
-          return;
-        }
-
-        const sectionTop = featuredSection.getBoundingClientRect().top;
-        const sectionBottom = featuredSection.getBoundingClientRect().bottom;
-        const viewportHeight = window.innerHeight;
-
-        // Show navbar at top or when section is not in view
-        if (window.scrollY < 100) {
-          setIsVisible(true);
-        } else if (sectionTop < viewportHeight * 0.8 && sectionBottom > 0) {
-          // Hide when Featured Collection section is in view
-          setIsVisible(false);
+        // Find the FeaturedProducts section (next section after Hero)
+        const featuredSection = document.querySelector('section[data-section="featured-collection"]');
+        
+        if (featuredSection) {
+          const sectionTop = featuredSection.getBoundingClientRect().top;
+          // Change color when the next section reaches the navbar position (top of viewport)
+          // The navbar is at the top, so when sectionTop <= 0, navbar is over the section
+          const scrolledPastHero = sectionTop <= 0;
+          setIsPastHero(scrolledPastHero);
         } else {
-          // Show when past the section
-          setIsVisible(true);
+          // Fallback: check if scrolled past viewport height
+          // Hero is pinned for 60% of viewport, so total scroll is ~1.6x viewport
+          const scrolledPastHero = window.scrollY > window.innerHeight * 1.6;
+          setIsPastHero(scrolledPastHero);
         }
-        throttledCheck();
+        setIsVisible(true); // Always visible on homepage
       };
 
       window.addEventListener("scroll", handleScroll, { passive: true });
@@ -225,14 +61,8 @@ export default function Navbar() {
     } else {
       // Other pages: always visible
       setIsVisible(true);
-      const handleScroll = () => {
-        throttledCheck();
-      };
-      window.addEventListener("scroll", handleScroll, { passive: true });
-      checkBackgroundBrightness();
-      return () => window.removeEventListener("scroll", handleScroll);
     }
-  }, [isHomePage, isCollectionPage, checkBackgroundBrightness]);
+  }, [isHomePage, isCollectionPage]);
 
   const navLinks = [
     { href: "/", label: "Inicio" },
@@ -260,17 +90,17 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Logo - Always visible, separate from navbar */}
+      {/* Logo - Positioned at top left, scrolls with page */}
       <Link
         href="/"
-        className="fixed top-1 sm:top-2 md:top-2 left-1 sm:left-2 md:left-2 z-[60] flex-shrink-0"
+        className="absolute top-1 sm:top-2 md:top-2 left-1 sm:left-2 md:left-2 z-[60] flex-shrink-0"
       >
         <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20">
           <Image
-            src={isBrightBackground ? "/images/logoblack.png" : "/images/logowhite.png"}
-            alt="STGO Fine Art Logo"
+            src={isHomePage && !isPastHero ? "/images/logowhite.png" : "/images/logoblack.png"}
+            alt="STGO Fine Art - Imprenta profesional de arte fine art y enmarcado en Chile"
             fill
-            className="object-contain transition-opacity duration-300"
+            className="object-contain"
             priority
           />
         </div>
@@ -280,12 +110,12 @@ export default function Navbar() {
       {isVisible && (
         <Link
           href="/cart"
-          className="fixed top-4 right-16 z-[70] max-[525px]:block hidden p-2 rounded-lg transition-colors duration-200"
+          className={`fixed top-4 right-16 z-[70] max-[525px]:block hidden p-2 rounded-lg transition-colors duration-200 ${isCartAnimating ? "animate-cart-bounce" : ""}`}
           style={{
-            color: isHomePage ? 'white' : '#111827',
+            color: isHomePage && !isPastHero ? 'white' : '#111827',
           }}
           onMouseEnter={(e) => {
-            if (isHomePage) {
+            if (isHomePage && !isPastHero) {
               e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             } else {
               e.currentTarget.style.backgroundColor = '#f3f4f6';
@@ -311,11 +141,11 @@ export default function Navbar() {
           </svg>
           {cartItemCount > 0 && (
             <span
-              className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${
+              className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center transition-all duration-200 ${
                 isHomePage
                   ? "bg-white text-gray-900"
                   : "bg-gray-900 text-white"
-              }`}
+              } ${isCartAnimating ? "animate-badge-pop" : ""}`}
             >
               {cartItemCount > 9 ? "9+" : cartItemCount}
             </span>
@@ -329,11 +159,11 @@ export default function Navbar() {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="fixed top-4 right-4 z-[70] max-[525px]:block hidden p-2 rounded-lg transition-colors duration-200"
           style={{
-            color: isMobileMenuOpen ? 'white' : (isHomePage ? 'white' : '#111827'),
+            color: isMobileMenuOpen ? 'white' : (isHomePage && !isPastHero ? 'white' : '#111827'),
             backgroundColor: isMobileMenuOpen ? 'transparent' : 'transparent',
           }}
           onMouseEnter={(e) => {
-            if (isMobileMenuOpen || isHomePage) {
+            if (isMobileMenuOpen || (isHomePage && !isPastHero)) {
               e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
             } else {
               e.currentTarget.style.backgroundColor = '#f3f4f6';
@@ -373,29 +203,30 @@ export default function Navbar() {
 
       {/* Navigation Bar - Desktop: Can hide/show, Mobile: Always visible when menu is open */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isVisible ? "translate-y-0" : "-translate-y-full"
-        }`}
+        } bg-transparent`}
       >
         {/* Desktop Navigation - Hidden on mobile (< 525px) */}
         <div className="hidden min-[525px]:flex items-center justify-center px-4 sm:px-6 md:px-8 pt-4 sm:pt-6 md:pt-8">
           <div className="flex gap-4 sm:gap-6 md:gap-8 lg:gap-12 items-center">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
+              const isNavbarBlack = isHomePage ? isPastHero : true;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={`nav-link relative font-medium text-sm sm:text-base md:text-lg transition-colors duration-200 ${
-                    isHomePage
-                      ? "text-white hover:text-gray-200"
-                      : "text-gray-900 hover:text-gray-700"
+                    isNavbarBlack
+                      ? "text-gray-900 hover:text-gray-700"
+                      : "text-white hover:text-gray-200"
                   }`}
                 >
                   {link.label}
                   <span
                     className={`nav-underline absolute bottom-0 left-0 h-0.5 ${
-                      isHomePage ? "bg-white" : "bg-gray-900"
+                      isNavbarBlack ? "bg-gray-900" : "bg-white"
                     } ${isActive ? "nav-underline-active" : ""}`}
                   />
                 </Link>
@@ -405,10 +236,10 @@ export default function Navbar() {
             <Link
               href="/cart"
               className={`relative p-2 rounded-lg transition-colors duration-200 ${
-                isHomePage
+                isHomePage && !isPastHero
                   ? "text-white hover:bg-white/10"
                   : "text-gray-900 hover:bg-gray-100"
-              }`}
+              } ${isCartAnimating ? "animate-cart-bounce" : ""}`}
               aria-label="Carrito de compras"
             >
               <svg
@@ -426,11 +257,11 @@ export default function Navbar() {
               </svg>
               {cartItemCount > 0 && (
                 <span
-                  className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center ${
-                    isHomePage
+                  className={`absolute -top-1 -right-1 w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center transition-all duration-200 ${
+                    isHomePage && !isPastHero
                       ? "bg-white text-gray-900"
                       : "bg-gray-900 text-white"
-                  }`}
+                  } ${isCartAnimating ? "animate-badge-pop" : ""}`}
                 >
                   {cartItemCount > 9 ? "9+" : cartItemCount}
                 </span>
