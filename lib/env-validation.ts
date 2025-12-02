@@ -32,9 +32,9 @@ export function validateEnvironmentVariables() {
     warnings.push('NEXT_PUBLIC_SITE_URL is not set, using default value');
   }
 
-  // Mailgun (optional but recommended)
-  if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-    warnings.push('Mailgun is not configured - contact form emails will not work');
+  // AWS SES (optional but recommended)
+  if (!process.env.SES_ACCESS_KEY_ID || !process.env.SES_SECRET_ACCESS_KEY) {
+    warnings.push('AWS SES is not configured - contact form emails will not work');
   }
 
   // Log warnings in development

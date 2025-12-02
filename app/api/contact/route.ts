@@ -1,23 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-// Mailgun API configuration
-// Get API key and domain from environment variables
-// Domain can be sandbox (sandboxXXXXX.mailgun.org) or custom verified domain
-const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
-const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN;
-const MAILGUN_BASE_URL = process.env.MAILGUN_BASE_URL || "https://api.mailgun.net";
+// AWS SES configuration
+const SES_REGION = process.env.SES_REGION || "us-east-1";
+const SES_ACCESS_KEY_ID = process.env.SES_ACCESS_KEY_ID;
+const SES_SECRET_ACCESS_KEY = process.env.SES_SECRET_ACCESS_KEY;
+const AWS_SES_FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || "noreply@stgofineart.com";
 const RECIPIENT_EMAIL = process.env.CONTACT_EMAIL || "imatgesduran@gmail.com";
+
+// Initialize SES client
+const sesClient = SES_ACCESS_KEY_ID && SES_SECRET_ACCESS_KEY
+  ? new SESClient({
+      region: SES_REGION,
+      credentials: {
+        accessKeyId: SES_ACCESS_KEY_ID,
+        secretAccessKey: SES_SECRET_ACCESS_KEY,
+      },
+    })
+  : null;
 
 export async function POST(request: NextRequest) {
   try {
-    // Validate environment variables
-    if (!MAILGUN_API_KEY || !MAILGUN_DOMAIN) {
-      console.error("Missing Mailgun configuration:", {
-        hasApiKey: !!MAILGUN_API_KEY,
-        hasDomain: !!MAILGUN_DOMAIN,
+    // Validate AWS SES configuration
+    if (!SES_ACCESS_KEY_ID || !SES_SECRET_ACCESS_KEY || !sesClient) {
+      console.error("Missing AWS SES configuration:", {
+        hasAccessKey: !!SES_ACCESS_KEY_ID,
+        hasSecretKey: !!SES_SECRET_ACCESS_KEY,
+        region: SES_REGION,
       });
       return NextResponse.json(
-        { error: "Email service is not configured. Please check Mailgun settings." },
+        { error: "Email service is not configured. Please check AWS SES settings." },
         { status: 500 }
       );
     }
@@ -50,77 +62,90 @@ ${message}
 Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.
     `.trim();
 
-    // Send email via Mailgun
-    // Note: For sandbox domains, recipient email must be added to authorized recipients in Mailgun dashboard
-    const formData = new URLSearchParams();
-    formData.append("from", `STGO Fine Art Contact <noreply@${MAILGUN_DOMAIN}>`);
-    formData.append("to", RECIPIENT_EMAIL);
-    formData.append("subject", `Contacto: ${subjectText}`);
-    formData.append("text", emailBody);
-    formData.append("reply-to", email);
-    
-    // Log request details (without sensitive data) for debugging
-    console.log("Sending email via Mailgun:", {
-      domain: MAILGUN_DOMAIN,
-      to: RECIPIENT_EMAIL,
-      from: `noreply@${MAILGUN_DOMAIN}`,
-      subject: `Contacto: ${subjectText}`,
+    // HTML version of the email
+    const emailBodyHtml = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <h2 style="color: #2c3e50;">Nuevo mensaje de contacto desde STGO Fine Art</h2>
+  <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+    <p><strong>Nombre:</strong> ${name}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    ${phone ? `<p><strong>Teléfono:</strong> ${phone}</p>` : ""}
+    <p><strong>Asunto:</strong> ${subjectText}</p>
+  </div>
+  <div style="margin: 20px 0;">
+    <h3 style="color: #2c3e50;">Mensaje:</h3>
+    <p style="white-space: pre-wrap;">${message}</p>
+  </div>
+  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+  <p style="color: #999; font-size: 12px;">Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.</p>
+</body>
+</html>
+    `.trim();
+
+    // Send email via AWS SES
+    const command = new SendEmailCommand({
+      Source: AWS_SES_FROM_EMAIL,
+      Destination: {
+        ToAddresses: [RECIPIENT_EMAIL],
+      },
+      Message: {
+        Subject: {
+          Data: `Contacto: ${subjectText}`,
+          Charset: "UTF-8",
+        },
+        Body: {
+          Text: {
+            Data: emailBody,
+            Charset: "UTF-8",
+          },
+          Html: {
+            Data: emailBodyHtml,
+            Charset: "UTF-8",
+          },
+        },
+      },
+      ReplyToAddresses: [email],
     });
 
-    const response = await fetch(
-      `${MAILGUN_BASE_URL}/v3/${MAILGUN_DOMAIN}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${Buffer.from(`api:${MAILGUN_API_KEY}`).toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: formData.toString(),
-      }
-    );
+    console.log("Sending email via AWS SES:", {
+      from: AWS_SES_FROM_EMAIL,
+      to: RECIPIENT_EMAIL,
+      subject: `Contacto: ${subjectText}`,
+      region: SES_REGION,
+    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
-      try {
-        errorData = JSON.parse(errorText);
-      } catch {
-        errorData = { message: errorText };
-      }
-      
-      console.error("Mailgun API error:", {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData,
-        domain: MAILGUN_DOMAIN,
-        hasApiKey: !!MAILGUN_API_KEY,
-      });
-      
-      // Provide more specific error messages
-      let errorMessage = "Failed to send email. Please try again later.";
-      if (response.status === 401 || response.status === 403) {
-        errorMessage = "Authentication failed. Please check Mailgun API key and domain configuration.";
-      } else if (response.status === 400 && errorData?.message?.includes("authorized")) {
-        errorMessage = "Email address not authorized. For sandbox domains, recipient must be added to authorized recipients in Mailgun dashboard.";
-      }
-      
-      return NextResponse.json(
-        { error: errorMessage },
-        { status: 500 }
-      );
-    }
+    const response = await sesClient.send(command);
 
-    const result = await response.json();
-    console.log("Email sent successfully:", result);
+    console.log("Email sent successfully:", {
+      messageId: response.MessageId,
+    });
 
     return NextResponse.json(
       { success: true, message: "Email sent successfully" },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error sending email:", error);
+    console.error("Error sending email:", {
+      error: error.message,
+      code: error.Code,
+      name: error.name,
+    });
+
+    // Provide more specific error messages
+    let errorMessage = "Failed to send email. Please try again later.";
+    if (error.Code === "InvalidParameterValue" || error.Code === "MessageRejected") {
+      errorMessage = "Invalid email configuration. Please check AWS SES settings.";
+    } else if (error.Code === "AccessDenied") {
+      errorMessage = "Access denied. Please check AWS credentials and permissions.";
+    }
+
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }
@@ -137,4 +162,3 @@ function getSubjectText(subject: string): string {
   };
   return subjects[subject] || "Consulta General";
 }
-

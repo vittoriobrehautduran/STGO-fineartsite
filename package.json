@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.940.0",
     "@supabase/supabase-js": "^2.81.1",
     "gsap": "^3.13.0",
     "mathjs": "^12.2.0",
