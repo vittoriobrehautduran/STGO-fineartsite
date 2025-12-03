@@ -7,6 +7,7 @@ const SES_ACCESS_KEY_ID = process.env.SES_ACCESS_KEY_ID;
 const SES_SECRET_ACCESS_KEY = process.env.SES_SECRET_ACCESS_KEY;
 const AWS_SES_FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || "noreply@stgofineart.com";
 const RECIPIENT_EMAIL = process.env.CONTACT_EMAIL || "imatgesduran@gmail.com";
+const SECONDARY_EMAIL = "vittorio.brehaut.duran@gmail.com";
 
 // Initialize SES client
 const sesClient = SES_ACCESS_KEY_ID && SES_SECRET_ACCESS_KEY
@@ -87,11 +88,11 @@ Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.
 </html>
     `.trim();
 
-    // Send email via AWS SES
+    // Send email via AWS SES to both recipients
     const command = new SendEmailCommand({
       Source: AWS_SES_FROM_EMAIL,
       Destination: {
-        ToAddresses: [RECIPIENT_EMAIL],
+        ToAddresses: [RECIPIENT_EMAIL, SECONDARY_EMAIL],
       },
       Message: {
         Subject: {
@@ -114,7 +115,7 @@ Este mensaje fue enviado desde el formulario de contacto de STGO Fine Art.
 
     console.log("Sending email via AWS SES:", {
       from: AWS_SES_FROM_EMAIL,
-      to: RECIPIENT_EMAIL,
+      to: [RECIPIENT_EMAIL, SECONDARY_EMAIL],
       subject: `Contacto: ${subjectText}`,
       region: SES_REGION,
     });
