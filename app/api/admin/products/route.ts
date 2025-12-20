@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
-
-// Create a server-side Supabase client with service role (if available)
-// For now, we'll use the regular client but handle RLS differently
-const getServerSupabase = () => {
-  // In production, you'd use service role key here
-  // For now, we'll work with the anon key but need to update RLS policies
-  return supabase;
-};
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +14,11 @@ export async function POST(request: NextRequest) {
       framing_option_ids,
     } = body;
 
+    // Use admin client to bypass RLS
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Create product
-    const { data: product, error: productError } = await getServerSupabase()
+    const { data: product, error: productError } = await supabaseAdmin
       .from("products")
       .insert({
         name,
@@ -49,7 +44,7 @@ export async function POST(request: NextRequest) {
         (s: any) => s.width > 0 && s.height > 0 && s.price > 0
       );
       if (validSizes.length > 0) {
-        const { error: sizesError } = await getServerSupabase()
+        const { error: sizesError } = await supabaseAdmin
           .from("product_sizes")
           .insert(
             validSizes.map((s: any) => ({
@@ -70,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Link framing options
     if (framing_option_ids && framing_option_ids.length > 0) {
-      const { error: framingError } = await getServerSupabase()
+      const { error: framingError } = await supabaseAdmin
         .from("product_framing_options")
         .insert(
           framing_option_ids.map((framingId: string) => ({
@@ -109,8 +104,11 @@ export async function PUT(request: NextRequest) {
       framing_option_ids,
     } = body;
 
+    // Use admin client to bypass RLS
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Update product
-    const { error: productError } = await getServerSupabase()
+    const { error: productError } = await supabaseAdmin
       .from("products")
       .update({
         name,
@@ -130,7 +128,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Delete existing sizes
-    await getServerSupabase()
+    await supabaseAdmin
       .from("product_sizes")
       .delete()
       .eq("product_id", id);
@@ -141,7 +139,7 @@ export async function PUT(request: NextRequest) {
         (s: any) => s.width > 0 && s.height > 0 && s.price > 0
       );
       if (validSizes.length > 0) {
-        await getServerSupabase()
+        await supabaseAdmin
           .from("product_sizes")
           .insert(
             validSizes.map((s: any) => ({
@@ -156,14 +154,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Delete existing framing relations
-    await getServerSupabase()
+    await supabaseAdmin
       .from("product_framing_options")
       .delete()
       .eq("product_id", id);
 
     // Add new framing relations
     if (framing_option_ids && framing_option_ids.length > 0) {
-      await getServerSupabase()
+      await supabaseAdmin
         .from("product_framing_options")
         .insert(
           framing_option_ids.map((framingId: string) => ({

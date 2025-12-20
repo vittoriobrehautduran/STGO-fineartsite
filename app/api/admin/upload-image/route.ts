@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +18,11 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Use admin client to bypass RLS for storage uploads
+    const supabaseAdmin = getSupabaseAdmin();
+
     // Upload to Supabase Storage
-    // Note: This will work if RLS allows it, otherwise we need service role
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from("product-images")
       .upload(fileName, buffer, {
         contentType: file.type,
@@ -38,13 +40,16 @@ export async function POST(request: NextRequest) {
     // Get public URL
     const {
       data: { publicUrl },
-    } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    } = supabaseAdmin.storage.from("product-images").getPublicUrl(fileName);
 
     return NextResponse.json({ url: publicUrl, path: fileName });
   } catch (error: any) {
     console.error("Error in POST /api/admin/upload-image:", error);
+    
+    // Ensure we always return JSON, even for errors
+    const errorMessage = error.message || "Internal server error";
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: errorMessage },
       { status: 500 }
     );
   }

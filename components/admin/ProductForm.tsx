@@ -126,7 +126,16 @@ export default function ProductForm({
           body: formData,
         });
 
-        const uploadResult = await uploadResponse.json();
+        // Check if response is JSON before parsing
+        const contentType = uploadResponse.headers.get("content-type");
+        let uploadResult;
+        
+        if (contentType && contentType.includes("application/json")) {
+          uploadResult = await uploadResponse.json();
+        } else {
+          const text = await uploadResponse.text();
+          throw new Error(`Error al subir la imagen: ${text.substring(0, 100)}`);
+        }
 
         if (!uploadResponse.ok) {
           throw new Error(uploadResult.error || "Error al subir la imagen");
@@ -172,7 +181,16 @@ export default function ProductForm({
         body: JSON.stringify(requestBody),
       });
 
-      const result = await response.json();
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get("content-type");
+      let result;
+      
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(`Error al guardar el producto: ${text.substring(0, 100)}`);
+      }
 
       if (!response.ok) {
         throw new Error(result.error || "Error al guardar el producto");
