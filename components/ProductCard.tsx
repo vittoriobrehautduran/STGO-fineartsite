@@ -8,6 +8,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/currency";
 import { useToast } from "@/contexts/ToastContext";
+import { calculateFramePrice } from "@/lib/fixed-sizes";
 
 interface ProductCardProps {
   product: Product;
@@ -32,7 +33,17 @@ export default function ProductCard({ product }: ProductCardProps) {
     setSelectedFraming(null);
   }, []);
 
-  // Prevent body scroll when modal is open and handle ESC key
+  useEffect(() => {
+    if (isModalOpen && !selectedFraming) {
+      const sinMarcoOption = product.framingOptions.find(
+        (opt) => opt.name === "Sin Marco" || opt.name.toLowerCase().includes("sin marco")
+      );
+      if (sinMarcoOption) {
+        setSelectedFraming(sinMarcoOption.id);
+      }
+    }
+  }, [isModalOpen, product.framingOptions, selectedFraming]);
+
   useEffect(() => {
     if (isModalOpen) {
       document.body.style.overflow = "hidden";
@@ -67,6 +78,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       return;
     }
 
+    const calculatedFramePrice = selectedFramingObj
+      ? calculateFramePrice(selectedFramingObj.name, selectedSizeObj.price)
+      : 0;
+
     const cartItem = {
       productId: product.id,
       productName: product.name,
@@ -80,9 +95,9 @@ export default function ProductCard({ product }: ProductCardProps) {
       sizePrice: selectedSizeObj.price,
       framingId: selectedFraming || null,
       framingName: selectedFramingObj?.name || null,
-      framingPrice: selectedFramingObj?.price || 0,
+      framingPrice: calculatedFramePrice,
       quantity: 1,
-      totalPrice: selectedSizeObj.price + (selectedFramingObj?.price || 0),
+      totalPrice: selectedSizeObj.price + calculatedFramePrice,
     };
 
     addToCart(cartItem);
@@ -101,9 +116,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     (f) => f.id === selectedFraming
   );
 
-  const totalPrice =
-    (selectedSizeObj?.price || product.price) +
-    (selectedFramingObj?.price || 0);
+  const printPrice = selectedSizeObj?.price || product.price || 0;
+  const framePrice = selectedFramingObj
+    ? calculateFramePrice(selectedFramingObj.name, printPrice)
+    : 0;
+
+  const totalPrice = printPrice + framePrice;
 
   return (
     <>
@@ -249,34 +267,49 @@ export default function ProductCard({ product }: ProductCardProps) {
                       Opciones de Enmarcado
                     </h4>
                     <div className="space-y-2">
-                      {product.framingOptions.map((option) => (
-                        <label
-                          key={option.id}
-                          className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200"
-                        >
-                          <input
-                            type="radio"
-                            name={`framing-${product.id}`}
-                            value={option.id}
-                            checked={selectedFraming === option.id}
-                            onChange={() => setSelectedFraming(option.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium text-base text-gray-900">
-                              {option.name}
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              {option.description}
-                            </div>
-                            {option.price > 0 && (
-                              <div className="text-sm font-medium text-gray-900 mt-1">
-                                +{formatCurrency(option.price)}
+                      {product.framingOptions.map((option) => {
+                        const printPrice = selectedSizeObj?.price || product.price || 0;
+                        const calculatedFramePrice = calculateFramePrice(option.name, printPrice);
+                        
+                        return (
+                          <label
+                            key={option.id}
+                            className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-all duration-200"
+                          >
+                            <input
+                              type="radio"
+                              name={`framing-${product.id}`}
+                              value={option.id}
+                              checked={selectedFraming === option.id}
+                              onChange={() => setSelectedFraming(option.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium text-base text-gray-900">
+                                {option.name}
                               </div>
-                            )}
-                          </div>
-                        </label>
-                      ))}
+                              <div className="text-sm text-gray-600">
+                                {option.description}
+                              </div>
+                              {calculatedFramePrice > 0 && (
+                                <div className="text-sm font-medium text-gray-900 mt-1">
+                                  +{formatCurrency(calculatedFramePrice)}
+                                  {selectedSizeObj && (
+                                    <span className="text-xs text-gray-500 ml-2">
+                                      (proporcional al tamaño)
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {calculatedFramePrice === 0 && option.name.toLowerCase().includes("sin marco") && (
+                                <div className="text-sm font-medium text-green-600 mt-1">
+                                  Gratis
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
 

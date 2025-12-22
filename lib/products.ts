@@ -70,16 +70,24 @@ export async function getAllProducts(): Promise<Product[]> {
           unit: s.unit as "inches" | "cm",
           price: parseFloat(s.price.toString()),
         }))
-        .sort((a, b) => a.width - b.width) || []; // Sort by width for consistent display
+        .sort((a, b) => a.width - b.width) || [];
 
     const productFramingIds =
       productFramingRelations
         ?.filter((r) => r.product_id === product.id)
         .map((r) => r.framing_option_id) || [];
 
+    const seenFramingNames = new Set<string>();
     const productFramingOptions: FramingOption[] =
       framingOptions
         ?.filter((f) => productFramingIds.includes(f.id))
+        .filter((f) => {
+          if (seenFramingNames.has(f.name)) {
+            return false;
+          }
+          seenFramingNames.add(f.name);
+          return true;
+        })
         .map((f) => ({
           id: f.id,
           name: f.name,
@@ -87,11 +95,15 @@ export async function getAllProducts(): Promise<Product[]> {
           price: parseFloat(f.price.toString()),
         })) || [];
 
+    const minPrice = productSizes.length > 0
+      ? Math.min(...productSizes.map((s) => s.price))
+      : 0;
+
     return {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.base_price.toString()),
+      price: minPrice,
       image: product.image_url,
       sizes: productSizes,
       framingOptions: productFramingOptions,
@@ -172,16 +184,24 @@ export async function getFeaturedProducts(): Promise<Product[]> {
           unit: s.unit as "inches" | "cm",
           price: parseFloat(s.price.toString()),
         }))
-        .sort((a, b) => a.width - b.width) || []; // Sort by width for consistent display
+        .sort((a, b) => a.width - b.width) || [];
 
     const productFramingIds =
       productFramingRelations
         ?.filter((r) => r.product_id === product.id)
         .map((r) => r.framing_option_id) || [];
 
+    const seenFramingNames = new Set<string>();
     const productFramingOptions: FramingOption[] =
       framingOptions
         ?.filter((f) => productFramingIds.includes(f.id))
+        .filter((f) => {
+          if (seenFramingNames.has(f.name)) {
+            return false;
+          }
+          seenFramingNames.add(f.name);
+          return true;
+        })
         .map((f) => ({
           id: f.id,
           name: f.name,
@@ -189,11 +209,15 @@ export async function getFeaturedProducts(): Promise<Product[]> {
           price: parseFloat(f.price.toString()),
         })) || [];
 
+    const minPrice = productSizes.length > 0
+      ? Math.min(...productSizes.map((s) => s.price))
+      : 0;
+
     return {
       id: product.id,
       name: product.name,
       description: product.description,
-      price: parseFloat(product.base_price.toString()),
+      price: minPrice,
       image: product.image_url,
       sizes: productSizes,
       framingOptions: productFramingOptions,
@@ -285,15 +309,24 @@ export async function getProductById(id: string): Promise<Product | null> {
         unit: s.unit as "inches" | "cm",
         price: parseFloat(s.price.toString()),
       }))
-      .sort((a, b) => a.width - b.width) || []; // Sort by width for consistent display
+      .sort((a, b) => a.width - b.width) || [];
 
+  const seenFramingNames = new Set<string>();
   const productFramingOptions: FramingOption[] =
-    framingOptions?.map((f) => ({
-      id: f.id,
-      name: f.name,
-      description: f.description,
-      price: parseFloat(f.price.toString()),
-    })) || [];
+    framingOptions
+      ?.filter((f) => {
+        if (seenFramingNames.has(f.name)) {
+          return false;
+        }
+        seenFramingNames.add(f.name);
+        return true;
+      })
+      .map((f) => ({
+        id: f.id,
+        name: f.name,
+        description: f.description,
+        price: parseFloat(f.price.toString()),
+      })) || [];
 
   const productMediaTypes: MediaType[] =
     mediaTypes?.map((m) => ({
@@ -302,11 +335,15 @@ export async function getProductById(id: string): Promise<Product | null> {
       description: m.description,
     })) || [];
 
+  const minPrice = productSizes.length > 0
+    ? Math.min(...productSizes.map((s) => s.price))
+    : 0;
+
   return {
     id: product.id,
     name: product.name,
     description: product.description,
-    price: parseFloat(product.base_price.toString()),
+    price: minPrice,
     image: product.image_url,
     sizes: productSizes,
     framingOptions: productFramingOptions,

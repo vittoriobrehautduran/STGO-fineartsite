@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/currency";
+import { FIXED_SIZES, FixedSize } from "@/lib/fixed-sizes";
 
 interface ProductFormProps {
   product?: any;
@@ -13,11 +14,8 @@ interface ProductFormProps {
   onSuccess: () => void;
 }
 
-interface Size {
-  id?: string;
-  width: number;
-  height: number;
-  unit: "cm" | "inches";
+interface SizePrice {
+  sizeKey: string; // e.g., "20x30"
   price: number;
 }
 
@@ -30,53 +28,110 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
-  const [basePrice, setBasePrice] = useState(product?.base_price || "");
   const [featured, setFeatured] = useState(product?.featured || false);
   const [imageUrl, setImageUrl] = useState(product?.image_url || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
     product?.image_url || null
   );
-  const [sizes, setSizes] = useState<Size[]>(
-    initialSizes.length > 0
-      ? initialSizes.map((s) => ({
-          id: s.id,
-          width: s.width,
-          height: s.height,
-          unit: s.unit,
-          price: s.price,
-        }))
-      : [{ width: 0, height: 0, unit: "cm" as const, price: 0 }]
+  
+  const initializeSizePrices = (): Record<string, number> => {
+    const prices: Record<string, number> = {};
+    FIXED_SIZES.forEach((size) => {
+      const sizeKey = `${size.width}x${size.height}`;
+      // Try to find existing price from initialSizes
+      const existingSize = initialSizes.find(
+        (s) => s.width === size.width && s.height === size.height
+      );
+      prices[sizeKey] = existingSize?.price || size.basePrice;
+    });
+    return prices;
+  };
+
+  const [sizePrices, setSizePrices] = useState<Record<string, number>>(
+    initializeSizePrices()
   );
+  
   const [framingOptions, setFramingOptions] = useState<any[]>([]);
-  const [selectedFramingIds, setSelectedFramingIds] = useState<string[]>(
-    initialFramingIds
-  );
+  
+  // Default framing options that should always be selected
+  const DEFAULT_FRAMING_OPTIONS = [
+    'Sin Marco',
+    'Dorado',
+    'Blanco',
+    'Marco Negro Clásico',
+    'Marco de Madera Natural',
+    'Plateado'
+  ];
+
+  const initializeFramingIds = (options: any[]): string[] => {
+    if (product && initialFramingIds.length > 0) {
+      // For existing products, use the existing selections
+      return initialFramingIds;
+    }
+    // For new products, select all default options
+    return options
+      .filter((opt) => DEFAULT_FRAMING_OPTIONS.includes(opt.name))
+      .map((opt) => opt.id);
+  };
+
+  const [selectedFramingIds, setSelectedFramingIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchFramingOptions() {
+      let options: any[] = [];
+      
       if (allFramingOptions.length > 0) {
-        setFramingOptions(allFramingOptions);
-        return;
+        options = allFramingOptions;
+      } else {
+        try {
+          const response = await fetch("/api/admin/framing-options");
+          const result = await response.json();
+          if (response.ok) {
+            options = result.data || [];
+          } else {
+            console.error("Error fetching framing options:", result.error);
+          }
+        } catch (error) {
+          console.error("Error fetching framing options:", error);
+        }
       }
 
-      try {
-        const response = await fetch("/api/admin/framing-options");
-        const result = await response.json();
-        if (response.ok) {
-          setFramingOptions(result.data || []);
-        } else {
-          console.error("Error fetching framing options:", result.error);
+      const seenNames = new Set<string>();
+      const uniqueOptions = options.filter((opt) => {
+        if (seenNames.has(opt.name)) {
+          return false;
         }
-      } catch (error) {
-        console.error("Error fetching framing options:", error);
+        seenNames.add(opt.name);
+        return true;
+      });
+
+      const defaultOptions = DEFAULT_FRAMING_OPTIONS.map((name) =>
+        uniqueOptions.find((opt) => opt.name === name)
+      ).filter(Boolean) as any[];
+
+      setFramingOptions(defaultOptions);
+      
+      if (defaultOptions.length > 0) {
+        const defaultIds = defaultOptions.map((opt) => opt.id);
+        
+        if (product && initialFramingIds.length > 0) {
+          const existingDefaultIds = defaultOptions
+            .filter((opt) => initialFramingIds.includes(opt.id))
+            .map((opt) => opt.id);
+          const mergedIds = [...new Set([...defaultIds, ...existingDefaultIds])];
+          setSelectedFramingIds(mergedIds);
+        } else {
+          setSelectedFramingIds(defaultIds);
+        }
       }
     }
 
     fetchFramingOptions();
-  }, [allFramingOptions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allFramingOptions, product?.id]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,22 +145,11 @@ export default function ProductForm({
     }
   };
 
-  const handleAddSize = () => {
-    setSizes([...sizes, { width: 0, height: 0, unit: "cm", price: 0 }]);
-  };
-
-  const handleRemoveSize = (index: number) => {
-    setSizes(sizes.filter((_, i) => i !== index));
-  };
-
-  const handleSizeChange = (
-    index: number,
-    field: keyof Size,
-    value: any
-  ) => {
-    const newSizes = [...sizes];
-    newSizes[index] = { ...newSizes[index], [field]: value };
-    setSizes(newSizes);
+  const handleSizePriceChange = (sizeKey: string, price: number) => {
+    setSizePrices({
+      ...sizePrices,
+      [sizeKey]: price,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,20 +192,35 @@ export default function ProductForm({
         throw new Error("Se requiere una imagen del producto");
       }
 
-      // Prepare valid sizes
-      const validSizes = sizes.filter(
-        (s) => s.width > 0 && s.height > 0 && s.price > 0
-      );
+      // Prepare sizes from fixed sizes with their prices
+      const sizes = FIXED_SIZES.map((size) => {
+        const sizeKey = `${size.width}x${size.height}`;
+        return {
+          width: size.width,
+          height: size.height,
+          unit: size.unit,
+          price: sizePrices[sizeKey] || size.basePrice,
+        };
+      }).filter((s) => s.price > 0); // Only include sizes with prices > 0
+
+      if (sizes.length === 0) {
+        throw new Error("Debe configurar al menos un tamaño con precio");
+      }
+
+      const defaultFramingIds = framingOptions
+        .filter((opt) => DEFAULT_FRAMING_OPTIONS.includes(opt.name))
+        .map((opt) => opt.id);
+      
+      const allFramingIds = [...new Set([...defaultFramingIds, ...selectedFramingIds])];
 
       // Create or update product via API
       const productData = {
         name,
         description,
-        base_price: basePrice,
         image_url: finalImageUrl,
         featured,
-        sizes: validSizes,
-        framing_option_ids: selectedFramingIds,
+        sizes: sizes,
+        framing_option_ids: allFramingIds,
       };
 
       const url = product?.id
@@ -245,32 +304,16 @@ export default function ProductForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Precio Base *
-            </label>
+        <div className="flex items-center">
+          <label className="flex items-center">
             <input
-              type="number"
-              step="0.01"
-              value={basePrice}
-              onChange={(e) => setBasePrice(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              required
+              type="checkbox"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+              className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
             />
-          </div>
-
-          <div className="flex items-center pt-8">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={featured}
-                onChange={(e) => setFeatured(e.target.checked)}
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-              />
-              <span className="ml-2 text-sm text-gray-700">Producto Destacado</span>
-            </label>
-          </div>
+            <span className="ml-2 text-sm text-gray-700">Producto Destacado</span>
+          </label>
         </div>
       </div>
 
@@ -310,127 +353,117 @@ export default function ProductForm({
 
       {/* Sizes */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Tamaños</h3>
-          <button
-            type="button"
-            onClick={handleAddSize}
-            className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-          >
-            + Agregar Tamaño
-          </button>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Tamaños y Precios</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Configure el precio para cada tamaño disponible. Los precios son en pesos chilenos (CLP).
+          </p>
         </div>
 
-        {sizes.map((size, index) => (
-          <div
-            key={index}
-            className="grid grid-cols-5 gap-4 p-4 border border-gray-200 rounded-lg"
-          >
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Ancho
-              </label>
-              <input
-                type="number"
-                value={size.width || ""}
-                onChange={(e) =>
-                  handleSizeChange(index, "width", parseInt(e.target.value) || 0)
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Alto
-              </label>
-              <input
-                type="number"
-                value={size.height || ""}
-                onChange={(e) =>
-                  handleSizeChange(index, "height", parseInt(e.target.value) || 0)
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                placeholder="0"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Unidad
-              </label>
-              <select
-                value={size.unit}
-                onChange={(e) =>
-                  handleSizeChange(index, "unit", e.target.value as "cm" | "inches")
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+        <div className="space-y-3">
+          {FIXED_SIZES.map((size) => {
+            const sizeKey = `${size.width}x${size.height}`;
+            const currentPrice = sizePrices[sizeKey] || size.basePrice;
+            return (
+              <div
+                key={sizeKey}
+                className="grid grid-cols-3 gap-4 p-4 border border-gray-200 rounded-lg items-center"
               >
-                <option value="cm">cm</option>
-                <option value="inches">inches</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Precio
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={size.price || ""}
-                onChange={(e) =>
-                  handleSizeChange(index, "price", parseFloat(e.target.value) || 0)
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                placeholder="0"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={() => handleRemoveSize(index)}
-                className="w-full px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100"
-              >
-                Eliminar
-              </button>
-            </div>
-          </div>
-        ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tamaño
+                  </label>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {size.label}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {size.width} × {size.height} {size.unit}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Precio (CLP) *
+                  </label>
+                  <input
+                    type="number"
+                    step="100"
+                    min="0"
+                    value={currentPrice}
+                    onChange={(e) =>
+                      handleSizePriceChange(
+                        sizeKey,
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    placeholder={size.basePrice.toString()}
+                    required
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Precio sugerido: {formatCurrency(size.basePrice)}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">Precio actual:</div>
+                  <div className="text-lg font-semibold text-gray-900">
+                    {formatCurrency(currentPrice)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Framing Options */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Opciones de Enmarcado
-        </h3>
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Opciones de Enmarcado
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Todas las opciones están incluidas por defecto. Los precios se calculan proporcionalmente al tamaño seleccionado.
+          </p>
+        </div>
         <div className="space-y-2">
-          {framingOptions.map((option) => (
-            <label
-              key={option.id}
-              className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={selectedFramingIds.includes(option.id)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedFramingIds([...selectedFramingIds, option.id]);
-                  } else {
-                    setSelectedFramingIds(
-                      selectedFramingIds.filter((id) => id !== option.id)
-                    );
-                  }
-                }}
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-              />
-              <div className="ml-3 flex-1">
-                <span className="text-sm font-medium text-gray-900">
-                  {option.name}
-                </span>
-                <p className="text-xs text-gray-500">{option.description}</p>
-                <p className="text-xs text-gray-600">{formatCurrency(option.price)}</p>
+          {framingOptions.map((option) => {
+            const isSelected = selectedFramingIds.includes(option.id);
+            const isSinMarco = option.name === 'Sin Marco';
+            
+            return (
+              <div
+                key={option.id}
+                className={`flex items-center p-3 border rounded-lg ${
+                  isSinMarco
+                    ? 'border-green-300 bg-green-50'
+                    : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  disabled={true}
+                  className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900 cursor-not-allowed opacity-60"
+                />
+                <div className="ml-3 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-900">
+                      {option.name}
+                    </span>
+                    {isSinMarco && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">
+                        Por defecto
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">{option.description}</p>
+                  <p className="text-xs text-gray-600 italic">
+                    Precio calculado proporcionalmente al tamaño
+                  </p>
+                </div>
               </div>
-            </label>
-          ))}
+            );
+          })}
         </div>
       </div>
 

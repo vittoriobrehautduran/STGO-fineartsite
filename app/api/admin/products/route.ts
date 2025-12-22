@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     const {
       name,
       description,
-      base_price,
       image_url,
       featured,
       sizes,
@@ -17,13 +16,12 @@ export async function POST(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Create product
     const { data: product, error: productError } = await supabaseAdmin
       .from("products")
       .insert({
         name,
         description,
-        base_price: parseFloat(base_price),
+        base_price: 0,
         image_url,
         featured: featured || false,
       })
@@ -97,7 +95,6 @@ export async function PUT(request: NextRequest) {
       id,
       name,
       description,
-      base_price,
       image_url,
       featured,
       sizes,
@@ -107,13 +104,12 @@ export async function PUT(request: NextRequest) {
     // Use admin client to bypass RLS
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Update product
     const { error: productError } = await supabaseAdmin
       .from("products")
       .update({
         name,
         description,
-        base_price: parseFloat(base_price),
+        base_price: 0,
         image_url,
         featured: featured || false,
       })

@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/currency";
+import { FIXED_SIZES, calculateFramePrice } from "@/lib/fixed-sizes";
 
 interface MediaType {
   id: string;
@@ -26,13 +27,13 @@ interface Size {
   basePrice: number; // Base price for this size
 }
 
-const STANDARD_SIZES: Size[] = [
-  { width: 20, height: 30, unit: "cm", basePrice: 199 },
-  { width: 30, height: 40, unit: "cm", basePrice: 299 },
-  { width: 40, height: 60, unit: "cm", basePrice: 399 },
-  { width: 50, height: 70, unit: "cm", basePrice: 499 },
-  { width: 60, height: 90, unit: "cm", basePrice: 699 },
-];
+// Use fixed sizes from the library
+const STANDARD_SIZES: Size[] = FIXED_SIZES.map((size) => ({
+  width: size.width,
+  height: size.height,
+  unit: size.unit,
+  basePrice: size.basePrice,
+}));
 
 type Step = "upload" | "upload-success" | "options" | "review";
 
@@ -179,11 +180,12 @@ export default function OrderFlow() {
     
     let total = selectedSize.basePrice;
     
-    // Add framing price if selected
+    // Add framing price if selected (calculated proportionally)
     if (selectedFraming) {
       const framing = framingOptions.find(f => f.id === selectedFraming);
       if (framing) {
-        total += framing.price;
+        const framePrice = calculateFramePrice(framing.name, selectedSize.basePrice);
+        total += framePrice;
       }
     }
     
@@ -563,27 +565,38 @@ export default function OrderFlow() {
               </button>
               {framingOptions
                 .filter((f) => f.name !== "Sin Marco")
-                .map((framing) => (
-                  <button
-                    key={framing.id}
-                    onClick={() => setSelectedFraming(framing.id)}
-                    className={`p-4 rounded-lg border-2 text-center transition-all ${
-                      selectedFraming === framing.id
-                        ? "border-gray-900 bg-gray-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="font-semibold text-gray-900">
-                      {framing.name}
-                    </div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {framing.description}
-                    </div>
-                    <div className="text-sm font-medium text-gray-700 mt-2">
-                      +{formatCurrency(framing.price)}
-                    </div>
-                  </button>
-                ))}
+                .map((framing) => {
+                  // Calculate frame price based on selected size
+                  const printPrice = selectedSize?.basePrice || 0;
+                  const calculatedFramePrice = calculateFramePrice(framing.name, printPrice);
+                  
+                  return (
+                    <button
+                      key={framing.id}
+                      onClick={() => setSelectedFraming(framing.id)}
+                      className={`p-4 rounded-lg border-2 text-center transition-all ${
+                        selectedFraming === framing.id
+                          ? "border-gray-900 bg-gray-50"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="font-semibold text-gray-900">
+                        {framing.name}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {framing.description}
+                      </div>
+                      <div className="text-sm font-medium text-gray-700 mt-2">
+                        +{formatCurrency(calculatedFramePrice)}
+                        {selectedSize && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            (proporcional)
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
             </div>
           </div>
 
