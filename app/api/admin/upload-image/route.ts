@@ -30,9 +30,24 @@ export async function POST(request: NextRequest) {
       });
 
     if (error) {
-      console.error("Storage upload error:", error);
+      console.error("Storage upload error:", JSON.stringify(error, null, 2));
+      
+      // Check if bucket doesn't exist
+      if (error.message?.includes("Bucket not found") || error.statusCode === "404") {
+        return NextResponse.json(
+          { 
+            error: "Storage bucket 'product-images' not found. Please create it in Supabase Storage.",
+            details: error.message
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: error.message || "Failed to upload image" },
+        { 
+          error: error.message || "Failed to upload image",
+          details: error.statusCode || error.error || null
+        },
         { status: 500 }
       );
     }
