@@ -571,30 +571,30 @@ export default function OrderFlow() {
                   const calculatedFramePrice = calculateFramePrice(framing.name, printPrice);
                   
                   return (
-                    <button
-                      key={framing.id}
-                      onClick={() => setSelectedFraming(framing.id)}
-                      className={`p-4 rounded-lg border-2 text-center transition-all ${
-                        selectedFraming === framing.id
-                          ? "border-gray-900 bg-gray-50"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className="font-semibold text-gray-900">
-                        {framing.name}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {framing.description}
-                      </div>
-                      <div className="text-sm font-medium text-gray-700 mt-2">
+                  <button
+                    key={framing.id}
+                    onClick={() => setSelectedFraming(framing.id)}
+                    className={`p-4 rounded-lg border-2 text-center transition-all ${
+                      selectedFraming === framing.id
+                        ? "border-gray-900 bg-gray-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="font-semibold text-gray-900">
+                      {framing.name}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {framing.description}
+                    </div>
+                    <div className="text-sm font-medium text-gray-700 mt-2">
                         +{formatCurrency(calculatedFramePrice)}
                         {selectedSize && (
                           <div className="text-xs text-gray-500 mt-1">
                             (proporcional)
                           </div>
                         )}
-                      </div>
-                    </button>
+                    </div>
+                  </button>
                   );
                 })}
             </div>

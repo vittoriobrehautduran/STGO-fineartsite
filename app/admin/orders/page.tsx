@@ -157,18 +157,18 @@ export default function OrdersPage() {
         <div className="flex gap-2">
           {!selectionMode ? (
             <>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="pending">Pendiente</option>
-                <option value="paid">Pagado</option>
-                <option value="processing">En Proceso</option>
-                <option value="completed">Completado</option>
-                <option value="cancelled">Cancelado</option>
-              </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="pending">Pendiente</option>
+            <option value="paid">Pagado</option>
+            <option value="processing">En Proceso</option>
+            <option value="completed">Completado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
               <button
                 onClick={() => setSelectionMode(true)}
                 className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
@@ -241,9 +241,9 @@ export default function OrdersPage() {
                   Fecha
                 </th>
                 {!selectionMode && (
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
                 )}
               </tr>
             </thead>
@@ -299,14 +299,14 @@ export default function OrdersPage() {
                     </div>
                   </td>
                   {!selectionMode && (
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Ver Detalles
-                      </Link>
-                    </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="text-blue-600 hover:text-blue-900"
+                    >
+                      Ver Detalles
+                    </Link>
+                  </td>
                   )}
                 </tr>
               ))}
