@@ -2,6 +2,9 @@ import { MetadataRoute } from 'next'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.com'
 
+// Cache sitemap for 1 hour to reduce function invocations
+export const revalidate = 3600;
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {

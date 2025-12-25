@@ -4,9 +4,9 @@ import Footer from "@/components/Footer";
 import { getAllProducts } from "@/lib/products";
 import type { Metadata } from "next";
 
-// Force dynamic rendering to always fetch fresh data from Supabase
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// Use ISR to cache the page and reduce function invocations
+// Page will be regenerated every 5 minutes (300 seconds) or on-demand
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Colección de Arte | Impresión Fine Art y Enmarcado",
