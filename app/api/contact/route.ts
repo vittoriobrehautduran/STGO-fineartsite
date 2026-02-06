@@ -6,7 +6,7 @@ const SES_REGION = process.env.SES_REGION || "us-east-1";
 const SES_ACCESS_KEY_ID = process.env.SES_ACCESS_KEY_ID;
 const SES_SECRET_ACCESS_KEY = process.env.SES_SECRET_ACCESS_KEY;
 const AWS_SES_FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || "noreply@stgofineart.com";
-const RECIPIENT_EMAIL = process.env.CONTACT_EMAIL || "imatgesduran@gmail.com";
+const RECIPIENT_EMAIL = process.env.CONTACT_EMAIL || "stgofineart@gmail.com";
 const SECONDARY_EMAIL = "vittorio.brehaut.duran@gmail.com";
 
 // Initialize SES client

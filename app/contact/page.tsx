@@ -92,8 +92,8 @@ export default function ContactPage() {
         </svg>
       ),
       title: "Email",
-      content: "imatgesduran@gmail.com",
-      link: "mailto:imatgesduran@gmail.com",
+      content: "stgofineart@gmail.com",
+      link: "mailto:stgofineart@gmail.com",
     },
     {
       icon: (
