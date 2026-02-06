@@ -300,3 +300,8 @@ textarea::placeholder {
   color: #9ca3af !important;
 }
 
+/* Hide scrollbar for horizontal scroll containers */
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
