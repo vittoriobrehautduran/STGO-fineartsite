@@ -14,6 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -40,8 +41,26 @@ export default function FeaturedProducts() {
     fetchProducts();
   }, []);
 
+  // Preload images before starting animation
   useEffect(() => {
-    if (featuredProducts.length === 0) return;
+    if (featuredProducts.length === 0 || loading) return;
+
+    const imagePromises = featuredProducts.slice(0, 4).map((product) => {
+      return new Promise<void>((resolve) => {
+        const img = new window.Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // Continue even if image fails
+        img.src = product.image;
+      });
+    });
+
+    Promise.all(imagePromises).then(() => {
+      setImagesLoaded(true);
+    });
+  }, [featuredProducts, loading]);
+
+  useEffect(() => {
+    if (featuredProducts.length === 0 || !imagesLoaded) return;
     const section = sectionRef.current;
     const title = titleRef.current;
     const carousel = carouselRef.current;
@@ -73,12 +92,18 @@ export default function FeaturedProducts() {
     const totalCardWidth = cardWidth + gap;
     const totalWidth = totalCardWidth * firstHalf.length;
 
-    // Create infinite scroll animation
+    // Create infinite scroll animation with GPU acceleration
+    gsap.set(carousel, { 
+      force3D: true,
+      backfaceVisibility: 'hidden'
+    });
     animationRef.current = gsap.to(carousel, {
       x: -totalWidth,
       duration: 100, // Adjust speed (higher = slower)
       ease: "none",
       repeat: -1,
+      force3D: true,
+      immediateRender: false,
     });
 
     return () => {
@@ -86,7 +111,7 @@ export default function FeaturedProducts() {
       if (titleTrigger) titleTrigger.kill();
       if (animationRef.current) animationRef.current.kill();
     };
-  }, [featuredProducts]);
+  }, [featuredProducts, imagesLoaded]);
 
   const handleMouseEnter = () => {
     if (animationRef.current) {
@@ -141,34 +166,66 @@ export default function FeaturedProducts() {
             className="overflow-hidden"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
+            style={{ willChange: 'transform' }}
           >
             <div
               ref={carouselRef}
               className="flex gap-6 sm:gap-8 md:gap-10"
-              style={{ width: "max-content" }}
+              style={{ 
+                width: "max-content",
+                willChange: 'transform',
+                transform: 'translateZ(0)'
+              }}
             >
-              {featuredProducts.map((product, index) => (
-                <Link
-                  key={`${product.id}-${index}`}
-                  href="/collection"
-                  className="group cursor-pointer flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]"
-                >
-                  <div className="relative aspect-[3/4] mb-5 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                    <Image
-                      src={product.image}
-                      alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
-                      width={320}
-                      height={427}
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  </div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors tracking-tight">
-                    {product.name}
-                  </h3>
-                  <p className="text-gray-600 font-medium">Desde {formatCurrency(product.price)}</p>
-                </Link>
-              ))}
+              {featuredProducts.map((product, index) => {
+                const isFirstBatch = index < featuredProducts.length / 2;
+                return (
+                  <Link
+                    key={`${product.id}-${index}`}
+                    href="/collection"
+                    className="group cursor-pointer flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]"
+                    style={{ 
+                      willChange: 'transform',
+                      contain: 'layout style paint'
+                    }}
+                  >
+                    <div 
+                      className="relative aspect-[3/4] mb-5 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500"
+                      style={{
+                        backfaceVisibility: 'hidden',
+                        WebkitBackfaceVisibility: 'hidden',
+                        transform: 'translateZ(0)',
+                        isolation: 'isolate'
+                      }}
+                    >
+                      <img
+                        src={product.image}
+                        alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
+                        width={640}
+                        height={854}
+                        loading={isFirstBatch && index < 4 ? "eager" : "lazy"}
+                        decoding="async"
+                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
+                        style={{ 
+                          willChange: 'transform',
+                          transform: 'translateZ(0)',
+                          backfaceVisibility: 'hidden',
+                          WebkitBackfaceVisibility: 'hidden',
+                          WebkitFontSmoothing: 'antialiased',
+                          MozOsxFontSmoothing: 'grayscale',
+                          minHeight: '100%',
+                          minWidth: '100%'
+                        } as React.CSSProperties}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors tracking-tight">
+                      {product.name}
+                    </h3>
+                    <p className="text-gray-600 font-medium">Desde {formatCurrency(product.price)}</p>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}
