@@ -201,8 +201,8 @@ export default function FeaturedProducts() {
                       <img
                         src={product.image}
                         alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
-                        width={640}
-                        height={854}
+                        width={1280}
+                        height={1707}
                         loading={isFirstBatch && index < 4 ? "eager" : "lazy"}
                         decoding="async"
                         className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
