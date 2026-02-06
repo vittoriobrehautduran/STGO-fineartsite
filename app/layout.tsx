@@ -281,6 +281,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${playfair.variable}`}>
       <head>
+        <meta name="google-site-verification" content="mIo0NeDLvLLvUfX8VxCTai3cOCGfweHzOunnF5NpVaI" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
