@@ -17,10 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
-  const imageRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const textAnimationCompleteRef = useRef(false);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -30,10 +27,8 @@ export default function Hero() {
 
     // Check if ScrollTrigger already exists for this hero
     const existingSlide = ScrollTrigger.getById("hero-text-slide");
-    const existingPin = ScrollTrigger.getById("hero-pin");
     
-    if (existingSlide || existingPin) {
-      // Already initialized, don't re-initialize
+    if (existingSlide) {
       return;
     }
 
@@ -41,63 +36,25 @@ export default function Hero() {
     gsap.set(text, { x: 0, opacity: 1 });
 
     let slideAnimation: gsap.core.Tween | null = null;
-    let pinAnimation: ScrollTrigger | null = null;
 
-    // Initialize ScrollTrigger immediately so it's ready when user scrolls
-    slideAnimation = gsap.fromTo(
-      text,
-      { x: 0, opacity: 1 }, // Start position
-      {
-        x: "100%",
-        opacity: 0,
-        ease: "power2.in",
-        immediateRender: false,
-        scrollTrigger: {
-          trigger: hero,
-          start: "top top",
-          end: "+=60%",
-          scrub: 1,
-          id: "hero-text-slide",
-          onUpdate: (self) => {
-            // Only allow animation progress if text animation is complete
-            if (!textAnimationCompleteRef.current) {
-              // Force animation to stay at start (progress 0)
-              slideAnimation?.progress(0);
-            }
-          },
-        },
-      }
-    );
-
-    // Pin the hero section - initialize immediately with optimized settings
-    pinAnimation = ScrollTrigger.create({
-      trigger: hero,
-      start: "top top",
-      end: "+=60%",
-      pin: true,
-      pinSpacing: true,
-      anticipatePin: 0,
-      pinReparent: false,
-      id: "hero-pin",
+    // Slide animation without pinning - text slides as user scrolls
+    slideAnimation = gsap.to(text, {
+      x: "100%",
+      opacity: 0,
+      ease: "power1.in",
+      scrollTrigger: {
+        trigger: hero,
+        start: "top top",
+        end: "top -50%",
+        scrub: 0.5,
+        id: "hero-text-slide",
+      },
     });
 
-    // Wait for SplittingText animation to complete (delay 300ms + animation time ~1.5s)
-    // Then enable the scroll animation
-    const timeout = setTimeout(() => {
-      textAnimationCompleteRef.current = true;
-      ScrollTrigger.refresh();
-    }, 2000); // Wait for SplittingText to complete
-
     return () => {
-      clearTimeout(timeout);
       if (slideAnimation) slideAnimation.kill();
-      if (pinAnimation) pinAnimation.kill();
-      ScrollTrigger.getAll().forEach((trigger) => {
-        const id = (trigger as any).vars?.id;
-        if (id && (id === "hero-text-slide" || id === "hero-pin")) {
-          trigger.kill();
-        }
-      });
+      const trigger = ScrollTrigger.getById("hero-text-slide");
+      if (trigger) trigger.kill();
     };
   }, []);
 
@@ -111,7 +68,6 @@ export default function Hero() {
       }}
     >
       <div 
-        ref={imageRef} 
         className="absolute inset-0 z-0 w-full h-full"
         style={{ 
           top: 0,
@@ -134,10 +90,7 @@ export default function Hero() {
           quality={85}
           sizes="100vw"
         />
-        <div
-          ref={overlayRef}
-          className="absolute inset-0 bg-black/20"
-        />
+        <div className="absolute inset-0 bg-black/20" />
       </div>
       <div className="relative z-10 h-full flex flex-col items-center justify-center overflow-hidden">
         <div ref={textRef} className="text-center px-4 w-full">

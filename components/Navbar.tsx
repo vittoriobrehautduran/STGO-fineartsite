@@ -5,6 +5,13 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { useCart } from "@/contexts/CartContext";
+import { Playfair_Display } from "next/font/google";
+
+const playfair = Playfair_Display({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -90,10 +97,10 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Logo - Positioned at top left, scrolls with page */}
+      {/* Logo - Positioned at top left, fixed position */}
       <Link
         href="/"
-        className="absolute top-1 sm:top-2 md:top-2 left-1 sm:left-2 md:left-2 z-[60] flex-shrink-0"
+        className="fixed top-1 sm:top-2 md:top-2 left-1 sm:left-2 md:left-2 z-[60] flex-shrink-0 flex flex-col items-center"
       >
         <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20">
           <Image
@@ -104,6 +111,9 @@ export default function Navbar() {
             priority
           />
         </div>
+        <span className={`${playfair.className} text-xs sm:text-sm md:text-base font-normal tracking-[0.15em] mt-1.5 uppercase ${isHomePage && !isPastHero ? 'text-white' : 'text-gray-900'}`}>
+          Studio
+        </span>
       </Link>
 
       {/* Mobile Cart Icon - Only visible on screens < 525px and when navbar is visible */}
