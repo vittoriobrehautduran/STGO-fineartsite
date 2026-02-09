@@ -111,7 +111,7 @@ export default function Navbar() {
             priority
           />
         </div>
-        <span className={`${playfair.className} text-xs sm:text-sm md:text-base font-normal tracking-[0.15em] mt-1.5 uppercase ${isHomePage && !isPastHero ? 'text-white' : 'text-gray-900'}`}>
+        <span className={`text-xs sm:text-sm md:text-base font-normal tracking-[0.15em] mt-1.5 uppercase ${isHomePage && !isPastHero ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: 'Arial, sans-serif' }}>
           Studio
         </span>
       </Link>

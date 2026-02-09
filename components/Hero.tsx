@@ -111,10 +111,10 @@ export default function Hero() {
         </div>
         
         {/* Brand Logos Section */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 py-6 sm:py-8 px-4 sm:px-6">
-          <div className="container mx-auto max-w-7xl">
-            <div className="flex flex-wrap items-center justify-center">
-              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+        <div className="absolute bottom-0 left-0 right-0 z-20 py-6 sm:py-8 px-4 sm:px-6 w-full">
+          <div className="w-full">
+            <div className="flex flex-wrap md:flex-nowrap items-end justify-center gap-12 sm:gap-16 md:gap-20 lg:gap-32 xl:gap-40 2xl:gap-48">
+              <div className="flex items-center justify-center h-14 sm:h-16 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300">
                 <Image
                   src="/images/brandlogos/logo Awagami.png"
                   alt="Awagami"
@@ -123,7 +123,7 @@ export default function Hero() {
                   className="h-full w-auto object-contain"
                 />
               </div>
-              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+              <div className="flex items-center justify-center h-14 sm:h-16 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300">
                 <Image
                   src="/images/brandlogos/logo Canon.webp"
                   alt="Canon"
@@ -132,30 +132,30 @@ export default function Hero() {
                   className="h-full w-auto object-contain"
                 />
               </div>
-              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-14 lg:h-16 opacity-80 hover:opacity-100 transition-opacity duration-300" style={{ transform: 'translateY(-12px)' }}>
                 <Image
                   src="/images/brandlogos/logo Canson.webp"
                   alt="Canson"
-                  width={160}
-                  height={64}
+                  width={140}
+                  height={56}
                   className="h-full w-auto object-contain"
                 />
               </div>
-              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+              <div className="flex items-center justify-center h-16 sm:h-18 md:h-18 lg:h-24 opacity-80 hover:opacity-100 transition-opacity duration-300" style={{ transform: 'translateY(8px)' }}>
                 <Image
                   src="/images/brandlogos/logo Eizo.webp"
                   alt="Eizo"
-                  width={160}
-                  height={64}
+                  width={180}
+                  height={72}
                   className="h-full w-auto object-contain"
                 />
               </div>
-              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+              <div className="flex items-center justify-center h-16 sm:h-18 md:h-18 lg:h-24 opacity-80 hover:opacity-100 transition-opacity duration-300">
                 <Image
                   src="/images/brandlogos/logo hahnemuhle.webp"
                   alt="Hahnemühle"
-                  width={160}
-                  height={64}
+                  width={180}
+                  height={72}
                   className="h-full w-auto object-contain"
                 />
               </div>
