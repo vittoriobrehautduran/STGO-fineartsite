@@ -156,6 +156,59 @@ export default function Hero() {
             Estudio de impresión Fine Art y enmarcado en Chile
           </p>
         </div>
+        
+        {/* Brand Logos Section */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 py-6 sm:py-8 px-4 sm:px-6">
+          <div className="container mx-auto max-w-7xl">
+            <div className="flex flex-wrap items-center justify-center">
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+                <Image
+                  src="/images/brandlogos/logo Awagami.png"
+                  alt="Awagami"
+                  width={160}
+                  height={64}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+                <Image
+                  src="/images/brandlogos/logo Canon.webp"
+                  alt="Canon"
+                  width={160}
+                  height={64}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+                <Image
+                  src="/images/brandlogos/logo Canson.webp"
+                  alt="Canson"
+                  width={160}
+                  height={64}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+                <Image
+                  src="/images/brandlogos/logo Eizo.webp"
+                  alt="Eizo"
+                  width={160}
+                  height={64}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+              <div className="flex items-center justify-center h-12 sm:h-14 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300 mx-4 sm:mx-6 md:mx-8 lg:mx-12 xl:mx-16">
+                <Image
+                  src="/images/brandlogos/logo hahnemuhle.webp"
+                  alt="Hahnemühle"
+                  width={160}
+                  height={64}
+                  className="h-full w-auto object-contain"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
