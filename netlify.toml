@@ -7,3 +7,18 @@
 [build.environment]
   NODE_VERSION = "20"
 
+# Redirect Netlify subdomain to custom domain (301 permanent redirect)
+# This tells search engines to use stgofineart.com instead
+[[redirects]]
+  from = "https://stgofineart.netlify.app/*"
+  to = "https://stgofineart.com/:splat"
+  status = 301
+  force = true
+
+# Also handle without https
+[[redirects]]
+  from = "http://stgofineart.netlify.app/*"
+  to = "https://stgofineart.com/:splat"
+  status = 301
+  force = true
+

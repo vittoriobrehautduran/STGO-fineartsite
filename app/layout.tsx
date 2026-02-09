@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://stgofineart.netlify.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://stgofineart.com"),
   alternates: {
     canonical: "/",
     languages: {
@@ -141,7 +141,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stgofineart.netlify.app";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://stgofineart.com";
   
   const organizationSchema = {
     "@context": "https://schema.org",
