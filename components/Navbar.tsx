@@ -97,7 +97,7 @@ export default function Navbar() {
       >
         <div className="relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20">
           <Image
-            src={isHomePage && !isPastHero ? "/images/logowhite.png" : "/images/logoblack.png"}
+            src={isHomePage && !isPastHero ? "/images/logowhite.webp" : "/images/logoblack.webp"}
             alt="STGO Fine Art - Imprenta profesional de arte fine art y enmarcado en Chile"
             fill
             className="object-contain"

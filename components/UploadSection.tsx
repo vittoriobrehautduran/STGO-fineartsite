@@ -102,7 +102,7 @@ export default function UploadSection() {
           {/* Top Right: Portrait Woman Image */}
           <div ref={image1Ref} className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl opacity-100 group">
             <Image
-              src="/images/homepageimg/portrait_woman.jpg"
+              src="/images/homepageimg/portrait_woman.webp"
               alt="Retrato de mujer"
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
@@ -116,7 +116,7 @@ export default function UploadSection() {
           {/* Bottom Left: Car Dark Image - Square */}
           <div ref={image2Ref} className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl opacity-100 group">
             <Image
-              src="/images/homepageimg/car_dark.jpg"
+              src="/images/homepageimg/car_dark.webp"
               alt="Automóvil"
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"

@@ -148,7 +148,7 @@ export default function RootLayout({
     "@type": "Organization",
     "name": "STGO Fine Art",
     "url": siteUrl,
-    "logo": `${siteUrl}/images/logowhite.png`,
+    "logo": `${siteUrl}/images/logowhite.webp`,
     "description": "Fotografía de arte fino de alta resolución, impresión profesional, enmarcado y servicios de instalación. Imprenta especializada en arte en Chile.",
     "sameAs": [],
     "contactPoint": {

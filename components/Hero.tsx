@@ -123,7 +123,7 @@ export default function Hero() {
         }}
       >
         <Image
-          src="/images/heroimg4.jpg"
+          src="/images/heroimg4.webp"
           alt="STGO Fine Art - Imprenta profesional de arte fine art y enmarcado en Chile"
           fill
           priority

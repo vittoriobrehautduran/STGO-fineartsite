@@ -8,9 +8,9 @@ interface LoadingScreenProps {
 
 // List of all images to preload
 const imagesToPreload = [
-  "/images/heroimg4.jpg",
-  "/images/homepageimg/portrait_woman.jpg",
-  "/images/homepageimg/car_dark.jpg",
+  "/images/heroimg4.webp",
+  "/images/homepageimg/portrait_woman.webp",
+  "/images/homepageimg/car_dark.webp",
 ];
 
 export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
