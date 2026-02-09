@@ -111,9 +111,6 @@ export default function Navbar() {
             priority
           />
         </div>
-        <span className={`text-xs sm:text-sm md:text-base font-normal tracking-[0.15em] mt-1.5 uppercase ${isHomePage && !isPastHero ? 'text-white' : 'text-gray-900'}`} style={{ fontFamily: 'Arial, sans-serif' }}>
-          Studio
-        </span>
       </Link>
 
       {/* Mobile Cart Icon - Only visible on screens < 525px and when navbar is visible */}
