@@ -323,11 +323,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                                   )}
                                 </div>
                               )}
-                              {calculatedFramePrice === 0 && option.name.toLowerCase().includes("sin marco") && (
-                                <div className="text-sm font-medium text-green-600 mt-1">
-                                  Gratis
-                                </div>
-                              )}
                             </div>
                           </label>
                         );
