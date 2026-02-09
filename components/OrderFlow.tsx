@@ -60,7 +60,10 @@ export default function OrderFlow() {
   const [customerFirstName, setCustomerFirstName] = useState("");
   const [customerLastName, setCustomerLastName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerStreet, setCustomerStreet] = useState("");
+  const [customerNumber, setCustomerNumber] = useState("");
+  const [customerComuna, setCustomerComuna] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
 
   // Error handling
   const [error, setError] = useState<string | null>(null);
@@ -203,8 +206,9 @@ export default function OrderFlow() {
 
   const handleCreateOrder = async () => {
     // Validate required fields
-    if (!customerEmail || !customerFirstName || !customerLastName || !customerAddress) {
-      setError("Por favor completa todos los campos requeridos (Nombre, Apellido, Email y Dirección)");
+    if (!customerEmail || !customerFirstName || !customerLastName || 
+        !customerStreet || !customerNumber || !customerComuna || !customerCity) {
+      setError("Por favor completa todos los campos requeridos (Nombre, Apellido, Email y todos los campos de dirección)");
       return;
     }
 
@@ -221,19 +225,20 @@ export default function OrderFlow() {
 
       // Combine first name and last name for customer_name
       const fullName = `${customerFirstName} ${customerLastName}`.trim();
+      
+      // Combine address fields into a single address string
+      const fullAddress = `${customerStreet} ${customerNumber}, ${customerComuna}, ${customerCity}`.trim();
 
       // Create order in database
       const orderDataToInsert: any = {
         customer_email: customerEmail,
         customer_name: fullName,
         customer_phone: customerPhone || null,
+        customer_address: fullAddress,
         total_amount: totalAmount,
         status: "pending",
         image_url: uploadedImageUrl,
       };
-
-      // Note: customer_address field is collected but not stored in database yet
-      // The address column needs to be added to the orders table first
 
       // Add special requests if provided (only if the field exists in the database)
       if (specialRequests.trim()) {
@@ -737,12 +742,36 @@ export default function OrderFlow() {
               onChange={(e) => setCustomerPhone(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
             />
-            <textarea
-              placeholder="Dirección * (Calle, Número, Comuna, Ciudad)"
-              value={customerAddress}
-              onChange={(e) => setCustomerAddress(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
-              rows={3}
+            <input
+              type="text"
+              placeholder="Calle *"
+              value={customerStreet}
+              onChange={(e) => setCustomerStreet(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Número *"
+              value={customerNumber}
+              onChange={(e) => setCustomerNumber(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Comuna *"
+              value={customerComuna}
+              onChange={(e) => setCustomerComuna(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Ciudad *"
+              value={customerCity}
+              onChange={(e) => setCustomerCity(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
               required
             />
           </div>

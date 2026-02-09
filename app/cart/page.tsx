@@ -19,7 +19,10 @@ export default function CartPage() {
     lastName: "",
     email: "",
     phone: "",
-    address: "",
+    street: "",
+    number: "",
+    comuna: "",
+    city: "",
   });
 
   const handleCheckout = async () => {
@@ -29,8 +32,9 @@ export default function CartPage() {
     }
 
     // Validate required fields
-    if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || !customerInfo.address) {
-      alert("Por favor completa todos los campos requeridos (Nombre, Apellido, Email y Dirección)");
+    if (!customerInfo.firstName || !customerInfo.lastName || !customerInfo.email || 
+        !customerInfo.street || !customerInfo.number || !customerInfo.comuna || !customerInfo.city) {
+      alert("Por favor completa todos los campos requeridos (Nombre, Apellido, Email y todos los campos de dirección)");
       return;
     }
 
@@ -45,11 +49,15 @@ export default function CartPage() {
       // Combine first name and last name for customer_name
       const fullName = `${customerInfo.firstName} ${customerInfo.lastName}`.trim();
       
+      // Combine address fields into a single address string
+      const fullAddress = `${customerInfo.street} ${customerInfo.number}, ${customerInfo.comuna}, ${customerInfo.city}`.trim();
+      
       // Create order in database
       const orderDataToInsert: any = {
         customer_email: customerInfo.email,
         customer_name: fullName,
         customer_phone: customerInfo.phone || null,
+        customer_address: fullAddress,
         total_amount: totalAmount,
         status: "pending",
         image_url: firstProductImage || "/images/logo1.jpg", // Use first product image or fallback
@@ -181,8 +189,8 @@ export default function CartPage() {
                         Enmarcado: <span className="whitespace-normal">{item.framingName}</span>
                       </p>
                     )}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mt-4">
-                      <div className="flex items-center gap-3">
+                    <div className="mt-4">
+                      <div className="flex items-center gap-3 mb-3">
                         <label className="text-sm text-gray-600 whitespace-nowrap">Cantidad:</label>
                         <div className="flex items-center gap-2">
                           <button
@@ -200,18 +208,18 @@ export default function CartPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="text-left sm:text-right">
-                        <p className="text-base sm:text-lg font-bold text-gray-900 break-words">
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => removeFromCart(index)}
+                          className="text-red-600 hover:text-red-700 text-sm"
+                        >
+                          Eliminar
+                        </button>
+                        <p className="text-base sm:text-lg font-bold text-gray-900">
                           {formatCurrency(item.totalPrice)}
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeFromCart(index)}
-                      className="mt-4 text-red-600 hover:text-red-700 text-sm"
-                    >
-                      Eliminar
-                    </button>
                   </div>
                 </div>
               ))}
@@ -285,16 +293,61 @@ export default function CartPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección *
+                      Calle *
                     </label>
-                    <textarea
-                      value={customerInfo.address}
+                    <input
+                      type="text"
+                      value={customerInfo.street}
                       onChange={(e) =>
-                        setCustomerInfo({ ...customerInfo, address: e.target.value })
+                        setCustomerInfo({ ...customerInfo, street: e.target.value })
                       }
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none"
-                      rows={3}
-                      placeholder="Calle, Número, Comuna, Ciudad"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Av. Providencia"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número *
+                    </label>
+                      <input
+                        type="text"
+                        value={customerInfo.number}
+                        onChange={(e) =>
+                          setCustomerInfo({ ...customerInfo, number: e.target.value })
+                        }
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        placeholder="1234"
+                        required
+                      />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Comuna *
+                    </label>
+                    <input
+                      type="text"
+                      value={customerInfo.comuna}
+                      onChange={(e) =>
+                        setCustomerInfo({ ...customerInfo, comuna: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Providencia"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Ciudad *
+                    </label>
+                    <input
+                      type="text"
+                      value={customerInfo.city}
+                      onChange={(e) =>
+                        setCustomerInfo({ ...customerInfo, city: e.target.value })
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Santiago"
                       required
                     />
                   </div>
