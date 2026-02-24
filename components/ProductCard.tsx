@@ -20,6 +20,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedFraming, setSelectedFraming] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const { addToCart } = useCart();
   const router = useRouter();
   const { showError, showSuccess } = useToast();
@@ -135,10 +136,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             aria-label={`Ver detalles de ${product.name}`}
           >
             <Image
+              key={`${product.id}-${product.image}`}
               src={product.image}
               alt={`${product.name} - Arte decorativo impresión fine art Chile`}
               fill
               className="object-cover"
+              unoptimized
             />
           </button>
               <div className="p-6 sm:p-8 flex flex-col justify-between">
@@ -207,10 +210,12 @@ export default function ProductCard({ product }: ProductCardProps) {
               <div className="md:sticky md:top-0">
                 <div className="relative aspect-[3/4] mb-4">
                   <Image
+                    key={`${product.id}-modal-${product.image}`}
                     src={product.image}
                     alt={`${product.name} - Impresión fine art profesional Chile`}
                     fill
                     className="object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
+                    unoptimized
                   />
                 </div>
                 <button
@@ -386,9 +391,25 @@ export default function ProductCard({ product }: ProductCardProps) {
               onClick={(e) => e.stopPropagation()}
             >
               <img
+                key={`${product.id}-fullsize-${product.image}`}
                 src={product.image}
                 alt={`${product.name} - Tamaño completo`}
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const imageKey = `${product.id}-fullsize-${product.image}`;
+                  if (!imageErrors.has(imageKey)) {
+                    setImageErrors(prev => new Set(prev).add(imageKey));
+                    try {
+                      const url = new URL(target.src);
+                      url.searchParams.set('_t', Date.now().toString());
+                      target.src = url.toString();
+                    } catch {
+                      const separator = target.src.includes('?') ? '&' : '?';
+                      target.src = `${target.src}${separator}_t=${Date.now()}`;
+                    }
+                  }
+                }}
               />
             </div>
           </div>,

@@ -13,6 +13,7 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Duplicate products to create seamless loop
   const duplicatedProducts = products.map((product, index) => ({
@@ -181,6 +182,7 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                   >
                     <div className="relative aspect-[3/4] mb-5 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
                       <img
+                        key={`${product.id}-${product.image}`}
                         src={product.image}
                         alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
                         width={1280}
@@ -191,6 +193,34 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                         style={{
                           backfaceVisibility: "hidden",
                           WebkitBackfaceVisibility: "hidden",
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const imageKey = `${product.id}-${product.image}`;
+                          if (!imageErrors.has(imageKey)) {
+                            setImageErrors(prev => new Set(prev).add(imageKey));
+                            // Force reload by adding cache-busting parameter
+                            try {
+                              const url = new URL(target.src);
+                              url.searchParams.set('_t', Date.now().toString());
+                              target.src = url.toString();
+                            } catch {
+                              // If URL parsing fails, try adding query param manually
+                              const separator = target.src.includes('?') ? '&' : '?';
+                              target.src = `${target.src}${separator}_t=${Date.now()}`;
+                            }
+                          }
+                        }}
+                        onLoad={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const imageKey = `${product.id}-${product.image}`;
+                          if (imageErrors.has(imageKey)) {
+                            setImageErrors(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(imageKey);
+                              return newSet;
+                            });
+                          }
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
