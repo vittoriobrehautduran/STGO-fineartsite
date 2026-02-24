@@ -141,6 +141,28 @@ export default function ProductCard({ product }: ProductCardProps) {
               className="object-cover w-full h-full"
               loading="lazy"
               decoding="async"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                const imageKey = `${product.id}-${product.image}`;
+                if (!imageErrors.has(imageKey)) {
+                  setImageErrors(prev => new Set(prev).add(imageKey));
+                  console.error('Image failed to load:', {
+                    productId: product.id,
+                    productName: product.name,
+                    imageUrl: product.image,
+                    attemptedUrl: target.src
+                  });
+                  // Try to reload with cache busting
+                  try {
+                    const url = new URL(target.src);
+                    url.searchParams.set('_t', Date.now().toString());
+                    target.src = url.toString();
+                  } catch {
+                    const separator = target.src.includes('?') ? '&' : '?';
+                    target.src = `${target.src}${separator}_t=${Date.now()}`;
+                  }
+                }
+              }}
             />
           </button>
               <div className="p-6 sm:p-8 flex flex-col justify-between">
@@ -215,6 +237,27 @@ export default function ProductCard({ product }: ProductCardProps) {
                     className="object-cover w-full h-full"
                     loading="lazy"
                     decoding="async"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      const imageKey = `${product.id}-modal-${product.image}`;
+                      if (!imageErrors.has(imageKey)) {
+                        setImageErrors(prev => new Set(prev).add(imageKey));
+                        console.error('Modal image failed to load:', {
+                          productId: product.id,
+                          productName: product.name,
+                          imageUrl: product.image,
+                          attemptedUrl: target.src
+                        });
+                        try {
+                          const url = new URL(target.src);
+                          url.searchParams.set('_t', Date.now().toString());
+                          target.src = url.toString();
+                        } catch {
+                          const separator = target.src.includes('?') ? '&' : '?';
+                          target.src = `${target.src}${separator}_t=${Date.now()}`;
+                        }
+                      }
+                    }}
                   />
                 </div>
                 <button
