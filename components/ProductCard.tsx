@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Product } from "@/types/product";
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -135,13 +134,13 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="relative aspect-[3/4] cursor-pointer overflow-hidden"
             aria-label={`Ver detalles de ${product.name}`}
           >
-            <Image
+            <img
               key={`${product.id}-${product.image}`}
               src={product.image}
               alt={`${product.name} - Arte decorativo impresión fine art Chile`}
-              fill
-              className="object-cover"
-              unoptimized
+              className="object-cover w-full h-full"
+              loading="lazy"
+              decoding="async"
             />
           </button>
               <div className="p-6 sm:p-8 flex flex-col justify-between">
@@ -208,14 +207,14 @@ export default function ProductCard({ product }: ProductCardProps) {
             {/* Modal Body */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="md:sticky md:top-0">
-                <div className="relative aspect-[3/4] mb-4">
-                  <Image
+                <div className="relative aspect-[3/4] mb-4 overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
+                  <img
                     key={`${product.id}-modal-${product.image}`}
                     src={product.image}
                     alt={`${product.name} - Impresión fine art profesional Chile`}
-                    fill
-                    className="object-cover rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
-                    unoptimized
+                    className="object-cover w-full h-full"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <button
