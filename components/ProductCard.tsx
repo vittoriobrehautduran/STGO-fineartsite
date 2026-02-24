@@ -20,6 +20,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [selectedFraming, setSelectedFraming] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const { addToCart } = useCart();
   const router = useRouter();
   const { showError, showSuccess } = useToast();
@@ -134,36 +135,39 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="relative aspect-[3/4] cursor-pointer overflow-hidden"
             aria-label={`Ver detalles de ${product.name}`}
           >
-            <img
-              key={`${product.id}-${product.image}`}
-              src={product.image}
-              alt={`${product.name} - Arte decorativo impresión fine art Chile`}
-              className="object-cover w-full h-full"
-              loading="lazy"
-              decoding="async"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                const imageKey = `${product.id}-${product.image}`;
-                if (!imageErrors.has(imageKey)) {
-                  setImageErrors(prev => new Set(prev).add(imageKey));
-                  console.error('Image failed to load:', {
-                    productId: product.id,
-                    productName: product.name,
-                    imageUrl: product.image,
-                    attemptedUrl: target.src
-                  });
-                  // Try to reload with cache busting
-                  try {
-                    const url = new URL(target.src);
-                    url.searchParams.set('_t', Date.now().toString());
-                    target.src = url.toString();
-                  } catch {
-                    const separator = target.src.includes('?') ? '&' : '?';
-                    target.src = `${target.src}${separator}_t=${Date.now()}`;
+            {failedImages.has(product.image) ? (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <div className="text-center p-4">
+                  <svg className="w-16 h-16 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-sm text-gray-500">Imagen no disponible</p>
+                </div>
+              </div>
+            ) : (
+              <img
+                key={`${product.id}-${product.image}`}
+                src={product.image}
+                alt={`${product.name} - Arte decorativo impresión fine art Chile`}
+                className="object-cover w-full h-full"
+                loading="lazy"
+                decoding="async"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  const imageKey = `${product.id}-${product.image}`;
+                  if (!imageErrors.has(imageKey)) {
+                    setImageErrors(prev => new Set(prev).add(imageKey));
+                    setFailedImages(prev => new Set(prev).add(product.image));
+                    console.error('Image failed to load:', {
+                      productId: product.id,
+                      productName: product.name,
+                      imageUrl: product.image,
+                      attemptedUrl: target.src
+                    });
                   }
-                }
-              }}
-            />
+                }}
+              />
+            )}
           </button>
               <div className="p-6 sm:p-8 flex flex-col justify-between">
             <div>
@@ -230,35 +234,39 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div className="md:sticky md:top-0">
                 <div className="relative aspect-[3/4] mb-4 overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-tr-none">
-                  <img
-                    key={`${product.id}-modal-${product.image}`}
-                    src={product.image}
-                    alt={`${product.name} - Impresión fine art profesional Chile`}
-                    className="object-cover w-full h-full"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      const imageKey = `${product.id}-modal-${product.image}`;
-                      if (!imageErrors.has(imageKey)) {
-                        setImageErrors(prev => new Set(prev).add(imageKey));
-                        console.error('Modal image failed to load:', {
-                          productId: product.id,
-                          productName: product.name,
-                          imageUrl: product.image,
-                          attemptedUrl: target.src
-                        });
-                        try {
-                          const url = new URL(target.src);
-                          url.searchParams.set('_t', Date.now().toString());
-                          target.src = url.toString();
-                        } catch {
-                          const separator = target.src.includes('?') ? '&' : '?';
-                          target.src = `${target.src}${separator}_t=${Date.now()}`;
+                  {failedImages.has(product.image) ? (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <svg className="w-16 h-16 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-sm text-gray-500">Imagen no disponible</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      key={`${product.id}-modal-${product.image}`}
+                      src={product.image}
+                      alt={`${product.name} - Impresión fine art profesional Chile`}
+                      className="object-cover w-full h-full"
+                      loading="lazy"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        const imageKey = `${product.id}-modal-${product.image}`;
+                        if (!imageErrors.has(imageKey)) {
+                          setImageErrors(prev => new Set(prev).add(imageKey));
+                          setFailedImages(prev => new Set(prev).add(product.image));
+                          console.error('Modal image failed to load:', {
+                            productId: product.id,
+                            productName: product.name,
+                            imageUrl: product.image,
+                            attemptedUrl: target.src
+                          });
                         }
-                      }
-                    }}
-                  />
+                      }}
+                    />
+                  )}
                 </div>
                 <button
                   onClick={() => setIsFullSizeOpen(true)}
