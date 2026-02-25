@@ -23,6 +23,29 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
         count: products.length,
         products: products.map(p => ({ id: p.id, name: p.name, image: p.image }))
       });
+      
+      // Verify image URLs are valid
+      products.forEach(product => {
+        if (product.image) {
+          console.log(`Checking image for ${product.name}:`, product.image);
+          // Test if image URL is accessible
+          fetch(product.image, { method: 'HEAD' })
+            .then(response => {
+              if (!response.ok) {
+                console.error(`❌ Image failed for ${product.name}:`, {
+                  url: product.image,
+                  status: response.status,
+                  statusText: response.statusText
+                });
+              } else {
+                console.log(`✅ Image OK for ${product.name}:`, product.image);
+              }
+            })
+            .catch(error => {
+              console.error(`❌ Image fetch error for ${product.name}:`, error);
+            });
+        }
+      });
     } else {
       console.warn('FeaturedProductsCarousel - No products provided');
     }
