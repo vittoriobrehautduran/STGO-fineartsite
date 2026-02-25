@@ -203,18 +203,35 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                           WebkitBackfaceVisibility: "hidden",
                           display: failedImages.has(product.image) ? "none" : "block"
                         }}
-                        onError={(e) => {
+                        onError={async (e) => {
                           const target = e.target as HTMLImageElement;
                           const imageKey = `${product.id}-${product.image}`;
                           if (!imageErrors.has(imageKey)) {
                             setImageErrors(prev => new Set(prev).add(imageKey));
                             setFailedImages(prev => new Set(prev).add(product.image));
-                            console.error('Featured product image failed to load:', {
-                              productId: product.id,
-                              productName: product.name,
-                              imageUrl: product.image,
-                              attemptedUrl: target.src
-                            });
+                            
+                            // Try to fetch the actual error from Supabase
+                            try {
+                              const response = await fetch(product.image, { method: 'HEAD' });
+                              const errorText = await response.text();
+                              console.error('Featured product image failed to load:', {
+                                productId: product.id,
+                                productName: product.name,
+                                imageUrl: product.image,
+                                attemptedUrl: target.src,
+                                status: response.status,
+                                statusText: response.statusText,
+                                errorResponse: errorText
+                              });
+                            } catch (fetchError) {
+                              console.error('Featured product image failed to load:', {
+                                productId: product.id,
+                                productName: product.name,
+                                imageUrl: product.image,
+                                attemptedUrl: target.src,
+                                fetchError
+                              });
+                            }
                           }
                         }}
                         onLoad={(e) => {

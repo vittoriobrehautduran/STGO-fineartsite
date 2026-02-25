@@ -142,20 +142,47 @@ export default function ProductCard({ product }: ProductCardProps) {
               className="object-cover w-full h-full"
               loading="lazy"
               decoding="async"
-              onError={(e) => {
+              onError={async (e) => {
                 const target = e.target as HTMLImageElement;
                 const imageKey = `${product.id}-${product.image}`;
                 if (!imageErrors.has(imageKey)) {
                   setImageErrors(prev => new Set(prev).add(imageKey));
                   setFailedImages(prev => new Set(prev).add(product.image));
-                  console.error('Image failed to load:', {
-                    productId: product.id,
-                    productName: product.name,
-                    imageUrl: product.image,
-                    attemptedUrl: target.src
-                  });
+                  
+                  // Try to fetch the actual error from Supabase
+                  try {
+                    const response = await fetch(product.image, { method: 'HEAD' });
+                    const errorText = await response.text();
+                    console.error('Image failed to load:', {
+                      productId: product.id,
+                      productName: product.name,
+                      imageUrl: product.image,
+                      attemptedUrl: target.src,
+                      status: response.status,
+                      statusText: response.statusText,
+                      errorResponse: errorText
+                    });
+                  } catch (fetchError) {
+                    console.error('Image failed to load:', {
+                      productId: product.id,
+                      productName: product.name,
+                      imageUrl: product.image,
+                      attemptedUrl: target.src,
+                      fetchError
+                    });
+                  }
                   // Hide the broken image and show placeholder
                   target.style.display = 'none';
+                }
+              }}
+              onLoad={() => {
+                // Clear from failed images if it successfully loads
+                if (failedImages.has(product.image)) {
+                  setFailedImages(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(product.image);
+                    return newSet;
+                  });
                 }
               }}
             />
