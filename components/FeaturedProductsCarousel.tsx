@@ -192,8 +192,55 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                     className="group cursor-pointer flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]"
                   >
                     <div className="relative aspect-[3/4] mb-5 overflow-hidden rounded-xl shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                      {failedImages.has(product.image) ? (
-                        <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                      <img
+                        key={`${product.id}-${product.image}`}
+                        src={product.image}
+                        alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
+                        width={1280}
+                        height={1707}
+                        loading={index < 2 ? "eager" : "lazy"}
+                        decoding="async"
+                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
+                        style={{
+                          backfaceVisibility: "hidden",
+                          WebkitBackfaceVisibility: "hidden",
+                          display: failedImages.has(product.image) ? "none" : "block"
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const imageKey = `${product.id}-${product.image}`;
+                          if (!imageErrors.has(imageKey)) {
+                            setImageErrors(prev => new Set(prev).add(imageKey));
+                            setFailedImages(prev => new Set(prev).add(product.image));
+                            console.error('Featured product image failed to load:', {
+                              productId: product.id,
+                              productName: product.name,
+                              imageUrl: product.image,
+                              attemptedUrl: target.src
+                            });
+                          }
+                        }}
+                        onLoad={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          const imageKey = `${product.id}-${product.image}`;
+                          if (imageErrors.has(imageKey)) {
+                            setImageErrors(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(imageKey);
+                              return newSet;
+                            });
+                          }
+                          if (failedImages.has(product.image)) {
+                            setFailedImages(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(product.image);
+                              return newSet;
+                            });
+                          }
+                        }}
+                      />
+                      {failedImages.has(product.image) && (
+                        <div className="absolute inset-0 w-full h-full bg-gray-200 flex items-center justify-center">
                           <div className="text-center p-4">
                             <svg className="w-16 h-16 mx-auto text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -201,53 +248,6 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                             <p className="text-sm text-gray-500">Imagen no disponible</p>
                           </div>
                         </div>
-                      ) : (
-                        <img
-                          key={`${product.id}-${product.image}`}
-                          src={product.image}
-                          alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
-                          width={1280}
-                          height={1707}
-                          loading={index < 2 ? "eager" : "lazy"}
-                          decoding="async"
-                          className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
-                          style={{
-                            backfaceVisibility: "hidden",
-                            WebkitBackfaceVisibility: "hidden",
-                          }}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const imageKey = `${product.id}-${product.image}`;
-                            if (!imageErrors.has(imageKey)) {
-                              setImageErrors(prev => new Set(prev).add(imageKey));
-                              setFailedImages(prev => new Set(prev).add(product.image));
-                              console.error('Featured product image failed to load:', {
-                                productId: product.id,
-                                productName: product.name,
-                                imageUrl: product.image,
-                                attemptedUrl: target.src
-                              });
-                            }
-                          }}
-                          onLoad={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            const imageKey = `${product.id}-${product.image}`;
-                            if (imageErrors.has(imageKey)) {
-                              setImageErrors(prev => {
-                                const newSet = new Set(prev);
-                                newSet.delete(imageKey);
-                                return newSet;
-                              });
-                            }
-                            if (failedImages.has(product.image)) {
-                              setFailedImages(prev => {
-                                const newSet = new Set(prev);
-                                newSet.delete(product.image);
-                                return newSet;
-                              });
-                            }
-                          }}
-                        />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     </div>
