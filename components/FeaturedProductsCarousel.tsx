@@ -16,24 +16,23 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  // Debug: Log products on mount
+  // Debug: Log products on mount and reset failed images when products change
   useEffect(() => {
     if (products && products.length > 0) {
       console.log('FeaturedProductsCarousel - Products loaded:', {
         count: products.length,
         products: products.map(p => ({ id: p.id, name: p.name, image: p.image }))
       });
+      // Reset failed images when products change (in case images were re-uploaded)
+      setFailedImages(new Set());
+      setImageErrors(new Set());
     } else {
       console.warn('FeaturedProductsCarousel - No products provided');
     }
   }, [products]);
 
-  // Duplicate products to create seamless loop
-  const duplicatedProducts = products.map((product, index) => ({
-    ...product,
-    id: `${product.id}-dup-${index}`,
-  }));
-  const allProducts = [...products, ...duplicatedProducts];
+  // Use products directly without duplication
+  const allProducts = products;
 
   const checkScrollButtons = () => {
     if (!scrollContainerRef.current) return;
@@ -186,10 +185,9 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
               style={{ width: "max-content" }}
             >
               {allProducts.map((product, index) => {
-                const isFirstBatch = index < allProducts.length / 2;
                 return (
                   <Link
-                    key={`${product.id}-${index}`}
+                    key={product.id}
                     href="/collection"
                     className="group cursor-pointer flex-shrink-0 w-[280px] sm:w-[300px] md:w-[320px]"
                   >
@@ -210,7 +208,7 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                           alt={`${product.name} - Impresión fine art y enmarcado profesional en Chile`}
                           width={1280}
                           height={1707}
-                          loading={isFirstBatch && index < 4 ? "eager" : "lazy"}
+                          loading={index < 2 ? "eager" : "lazy"}
                           decoding="async"
                           className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700 ease-out"
                           style={{

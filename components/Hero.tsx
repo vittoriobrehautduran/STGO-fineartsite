@@ -121,6 +121,7 @@ export default function Hero() {
                   width={160}
                   height={64}
                   className="h-full w-auto object-contain"
+                  style={{ width: "auto", height: "100%" }}
                 />
               </div>
               <div className="flex items-center justify-center h-14 sm:h-16 md:h-16 lg:h-20 opacity-80 hover:opacity-100 transition-opacity duration-300">
@@ -130,6 +131,7 @@ export default function Hero() {
                   width={160}
                   height={64}
                   className="h-full w-auto object-contain"
+                  style={{ width: "auto", height: "100%" }}
                 />
               </div>
               <div className="flex items-center justify-center h-12 sm:h-14 md:h-14 lg:h-16 opacity-80 hover:opacity-100 transition-opacity duration-300" style={{ transform: 'translateY(-12px)' }}>
@@ -139,6 +141,7 @@ export default function Hero() {
                   width={140}
                   height={56}
                   className="h-full w-auto object-contain"
+                  style={{ width: "auto", height: "100%" }}
                 />
               </div>
               <div className="flex items-center justify-center h-16 sm:h-18 md:h-18 lg:h-24 opacity-80 hover:opacity-100 transition-opacity duration-300" style={{ transform: 'translateY(8px)' }}>
@@ -148,6 +151,7 @@ export default function Hero() {
                   width={180}
                   height={72}
                   className="h-full w-auto object-contain"
+                  style={{ width: "auto", height: "100%" }}
                 />
               </div>
               <div className="flex items-center justify-center h-16 sm:h-18 md:h-18 lg:h-24 opacity-80 hover:opacity-100 transition-opacity duration-300">
@@ -157,6 +161,7 @@ export default function Hero() {
                   width={180}
                   height={72}
                   className="h-full w-auto object-contain"
+                  style={{ width: "auto", height: "100%" }}
                 />
               </div>
             </div>
