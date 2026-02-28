@@ -1,8 +1,7 @@
-import { getFeaturedProducts } from "@/lib/products";
 import HomeClient from "./HomeClient";
 
 export default async function Home() {
-  const featuredProducts = await getFeaturedProducts();
-
-  return <HomeClient featuredProducts={featuredProducts} />;
+  // Featured products are now hardcoded in FeaturedProductsCarousel
+  // No need to fetch from database
+  return <HomeClient featuredProducts={[]} />;
 }

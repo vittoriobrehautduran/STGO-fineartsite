@@ -28,7 +28,6 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
-  const [featured, setFeatured] = useState(product?.featured || false);
   const [imageUrl, setImageUrl] = useState(product?.image_url || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
@@ -218,7 +217,7 @@ export default function ProductForm({
         name,
         description,
         image_url: finalImageUrl,
-        featured,
+        featured: false, // Featured collection is now hardcoded, always set to false
         sizes: sizes,
         framing_option_ids: allFramingIds,
       };
@@ -304,17 +303,6 @@ export default function ProductForm({
           />
         </div>
 
-        <div className="flex items-center">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
-              className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-            />
-            <span className="ml-2 text-sm text-gray-700">Producto Destacado</span>
-          </label>
-        </div>
       </div>
 
       {/* Image */}

@@ -5,54 +5,76 @@ import { useRef, useState, useEffect } from "react";
 import { Product } from "@/types/product";
 import { formatCurrency } from "@/lib/currency";
 
+// Hardcoded featured products using local images
+const HARDCODED_FEATURED_PRODUCTS: Product[] = [
+  {
+    id: "featured-1",
+    name: "Barcelona",
+    description: "Arte decorativo de Barcelona",
+    price: 20000,
+    image: "/images/colecciondestacada/barcelona.webp",
+    sizes: [],
+    framingOptions: [],
+  },
+  {
+    id: "featured-2",
+    name: "Positano",
+    description: "Arte decorativo de Positano",
+    price: 20000,
+    image: "/images/colecciondestacada/positano.webp",
+    sizes: [],
+    framingOptions: [],
+  },
+  {
+    id: "featured-3",
+    name: "Mont Ventoux",
+    description: "Arte decorativo de Mont Ventoux",
+    price: 20000,
+    image: "/images/colecciondestacada/mont_ventoux.webp",
+    sizes: [],
+    framingOptions: [],
+  },
+  {
+    id: "featured-4",
+    name: "Caballos Patagonia",
+    description: "Arte decorativo de Caballos Patagonia",
+    price: 20000,
+    image: "/images/colecciondestacada/caballos_patagonia2.webp",
+    sizes: [],
+    framingOptions: [],
+  },
+  {
+    id: "featured-5",
+    name: "Stockholm",
+    description: "Arte decorativo de Stockholm",
+    price: 20000,
+    image: "/images/colecciondestacada/stockholm.webp",
+    sizes: [],
+    framingOptions: [],
+  },
+];
+
 interface FeaturedProductsCarouselProps {
-  products: Product[];
+  products?: Product[]; // Made optional since we're using hardcoded data
 }
 
 export default function FeaturedProductsCarousel({ products }: FeaturedProductsCarouselProps) {
+  // Use hardcoded products instead of database products
+  const featuredProducts = HARDCODED_FEATURED_PRODUCTS;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  // Debug: Log products on mount
+  // Reset failed images on mount
   useEffect(() => {
-    if (products && products.length > 0) {
-      console.log('FeaturedProductsCarousel - Products loaded:', {
-        count: products.length,
-        products: products.map(p => ({ id: p.id, name: p.name, image: p.image }))
-      });
-      
-      // Verify image URLs are valid
-      products.forEach(product => {
-        if (product.image) {
-          console.log(`Checking image for ${product.name}:`, product.image);
-          // Test if image URL is accessible
-          fetch(product.image, { method: 'HEAD' })
-            .then(response => {
-              if (!response.ok) {
-                console.error(`❌ Image failed for ${product.name}:`, {
-                  url: product.image,
-                  status: response.status,
-                  statusText: response.statusText
-                });
-              } else {
-                console.log(`✅ Image OK for ${product.name}:`, product.image);
-              }
-            })
-            .catch(error => {
-              console.error(`❌ Image fetch error for ${product.name}:`, error);
-            });
-        }
-      });
-    } else {
-      console.warn('FeaturedProductsCarousel - No products provided');
-    }
-  }, [products]);
+    setFailedImages(new Set());
+    setImageErrors(new Set());
+  }, []);
 
-  // Use products directly without duplication
-  const allProducts = products;
+  // Use hardcoded featured products
+  const allProducts = featuredProducts;
 
   const checkScrollButtons = () => {
     if (!scrollContainerRef.current) return;
@@ -71,7 +93,7 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
       container.addEventListener("scroll", checkScrollButtons);
       return () => container.removeEventListener("scroll", checkScrollButtons);
     }
-  }, [products]);
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return;
@@ -92,7 +114,7 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
     });
   };
 
-  if (products.length === 0) {
+  if (featuredProducts.length === 0) {
     return (
       <section
         data-section="featured-collection"
@@ -224,53 +246,36 @@ export default function FeaturedProductsCarousel({ products }: FeaturedProductsC
                         style={{
                           backfaceVisibility: "hidden",
                           WebkitBackfaceVisibility: "hidden",
-                          display: failedImages.has(product.image) ? "none" : "block"
                         }}
-                        onError={async (e) => {
+                        onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           const imageKey = `${product.id}-${product.image}`;
                           if (!imageErrors.has(imageKey)) {
                             setImageErrors(prev => new Set(prev).add(imageKey));
                             setFailedImages(prev => new Set(prev).add(product.image));
-                            
-                            // Try to fetch the actual error from Supabase
-                            try {
-                              const response = await fetch(product.image, { method: 'HEAD' });
-                              const errorText = await response.text();
-                              console.error('Featured product image failed to load:', {
-                                productId: product.id,
-                                productName: product.name,
-                                imageUrl: product.image,
-                                attemptedUrl: target.src,
-                                status: response.status,
-                                statusText: response.statusText,
-                                errorResponse: errorText
-                              });
-                            } catch (fetchError) {
-                              console.error('Featured product image failed to load:', {
-                                productId: product.id,
-                                productName: product.name,
-                                imageUrl: product.image,
-                                attemptedUrl: target.src,
-                                fetchError
-                              });
-                            }
+                            console.error('Featured product image failed to load:', {
+                              productId: product.id,
+                              productName: product.name,
+                              imageUrl: product.image,
+                              attemptedUrl: target.src
+                            });
                           }
                         }}
                         onLoad={(e) => {
                           const target = e.target as HTMLImageElement;
                           const imageKey = `${product.id}-${product.image}`;
-                          if (imageErrors.has(imageKey)) {
-                            setImageErrors(prev => {
-                              const newSet = new Set(prev);
-                              newSet.delete(imageKey);
-                              return newSet;
-                            });
-                          }
+                          // Clear from failed images when image successfully loads
                           if (failedImages.has(product.image)) {
                             setFailedImages(prev => {
                               const newSet = new Set(prev);
                               newSet.delete(product.image);
+                              return newSet;
+                            });
+                          }
+                          if (imageErrors.has(imageKey)) {
+                            setImageErrors(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(imageKey);
                               return newSet;
                             });
                           }
