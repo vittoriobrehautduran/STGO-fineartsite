@@ -274,6 +274,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Call Supabase Edge Function to send Purchase event to Meta CAPI
+    // Only if payment was approved
+    if (isApproved) {
+      try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        
+        if (supabaseUrl && supabaseAnonKey) {
+          const edgeFunctionUrl = `${supabaseUrl}/functions/v1/send-meta-purchase`;
+          
+          // Get client IP from x-forwarded-for header (Netlify)
+          const forwardedFor = request.headers.get('x-forwarded-for');
+          const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                          request.headers.get('x-real-ip') || 
+                          null;
+          
+          // Get user agent
+          const userAgent = request.headers.get('user-agent') || null;
+          
+          const edgeResponse = await fetch(edgeFunctionUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${supabaseAnonKey}`,
+            },
+            body: JSON.stringify({ 
+              orderId,
+              client_ip_address: clientIp,
+              client_user_agent: userAgent,
+            }),
+          });
+
+          if (!edgeResponse.ok) {
+            const errorData = await edgeResponse.json().catch(() => ({}));
+            console.warn('Failed to send Meta CAPI event:', errorData);
+            // Don't fail the commit if Meta event fails
+          } else {
+            const edgeResult = await edgeResponse.json();
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Meta CAPI event sent successfully:', edgeResult);
+            }
+          }
+        } else {
+          console.warn('Supabase URL or Anon Key not configured, skipping Meta CAPI event');
+        }
+      } catch (metaError: any) {
+        console.warn('Error calling Meta CAPI Edge Function:', metaError);
+        // Don't fail the commit if Meta event fails
+      }
+    }
+
     return NextResponse.json({
       success: isApproved,
       orderId: orderId,

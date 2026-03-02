@@ -43,6 +43,15 @@ function CheckoutContent() {
     fetchOrder();
   }, [orderId]);
 
+  // Get cookie value by name
+  const getCookie = (name: string): string | null => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  };
+
   const handlePayWithTransbank = async () => {
     if (!order || !orderId) {
       setPaymentError('No se pudo cargar la información del pedido');
@@ -53,6 +62,44 @@ function CheckoutContent() {
     setPaymentError(null);
 
     try {
+      // Get Meta Pixel cookies (fbp, fbc)
+      const fbp = getCookie('_fbp');
+      const fbc = getCookie('_fbc');
+      
+      // Get client user agent
+      const clientUserAgent = typeof navigator !== 'undefined' ? navigator.userAgent : null;
+      const eventSourceUrl = window.location.href;
+
+      // Fire InitiateCheckout Pixel event
+      if (typeof window !== 'undefined' && (window as any).fbq) {
+        (window as any).fbq('track', 'InitiateCheckout', {
+          content_name: order.special_requests === 'Donación' ? 'Donación' : 'Pedido',
+          value: order.total_amount,
+          currency: 'CLP',
+        });
+      }
+
+      // Store checkout data in Supabase before redirect
+      const { error: checkoutDataError } = await supabase
+        .from('checkout_data')
+        .upsert({
+          order_id: orderId,
+          event_id: orderId,
+          fbp: fbp || null,
+          fbc: fbc || null,
+          email: order.customer_email,
+          amount: order.total_amount,
+          event_source_url: eventSourceUrl,
+          client_user_agent: clientUserAgent,
+        }, {
+          onConflict: 'order_id'
+        });
+
+      if (checkoutDataError) {
+        console.warn('Failed to store checkout data:', checkoutDataError);
+        // Continue anyway - Edge Function can still work without fbp/fbc
+      }
+
       // Create Transbank transaction
       const response = await fetch('/api/transbank/create', {
         method: 'POST',
