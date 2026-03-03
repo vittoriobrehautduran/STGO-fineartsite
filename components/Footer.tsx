@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -153,6 +154,28 @@ export default function Footer() {
                   {social.icon}
                 </a>
               ))}
+            </div>
+            <div className="mt-6 pt-6 border-t border-gray-800">
+              <p className="text-xs text-gray-500 mb-2">
+                Sitio web desarrollado y mantenido por
+              </p>
+              <a
+                href="https://brehautconsulting.com/es"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity duration-200"
+              >
+                <Image
+                  src="/images/bclogorefined.webp"
+                  alt="Brehaut Consulting"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8 object-contain"
+                />
+                <span className="text-xs text-gray-400 hover:text-gray-300 transition-colors duration-200">
+                  Brehaut Consulting
+                </span>
+              </a>
             </div>
           </div>
         </div>
