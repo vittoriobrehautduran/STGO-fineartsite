@@ -118,21 +118,17 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicons/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
-      { url: "/favicons/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicons/favicon.ico", sizes: "any" },
+      { url: "/favicons/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicons/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
-    apple: [
-      { url: "/favicons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
+    shortcut: ["/favicons/favicon.ico"],
+    apple: [{ url: "/favicons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
-  manifest: "/favicons/manifest.webmanifest",
+  manifest: "/favicons/site.webmanifest",
   other: {
     "msapplication-TileColor": "#000",
-    "msapplication-TileImage": "/favicons/mstile-144x144.webp",
-    "msapplication-config": "/favicons/browserconfig.xml",
+    "apple-mobile-web-app-title": "Fine Art",
   },
 };
 
