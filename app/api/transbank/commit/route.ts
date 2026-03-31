@@ -21,6 +21,7 @@ const sesClient = SES_ACCESS_KEY_ID && SES_SECRET_ACCESS_KEY
 export async function POST(request: NextRequest) {
   try {
     const { token_ws, order_id } = await request.json();
+    const supabaseAdmin = getSupabaseAdmin();
 
     if (!token_ws) {
       return NextResponse.json(
@@ -66,6 +67,53 @@ export async function POST(request: NextRequest) {
       const isSessionExpired = errorMessage.includes('expired') || 
                               errorMessage.includes('not found') ||
                               errorMessage.includes('invalid');
+
+      // If commit fails, check current order status before returning hard failure.
+      // This handles edge cases where payment was processed but callback confirmation is delayed.
+      let fallbackOrder: { id: string; status: string } | null = null;
+      try {
+        if (order_id) {
+          const { data: orderById } = await supabaseAdmin
+            .from('orders')
+            .select('id, status')
+            .eq('id', order_id)
+            .single();
+          fallbackOrder = orderById || null;
+        }
+
+        if (!fallbackOrder && token_ws) {
+          const { data: orderByToken } = await supabaseAdmin
+            .from('orders')
+            .select('id, status')
+            .eq('transbank_token', token_ws)
+            .single();
+          fallbackOrder = orderByToken || null;
+        }
+      } catch (fallbackLookupError) {
+        console.warn('Fallback order lookup after commit error failed:', fallbackLookupError);
+      }
+
+      if (fallbackOrder?.status === 'paid') {
+        return NextResponse.json({
+          success: true,
+          orderId: fallbackOrder.id,
+          message: 'Order already marked as paid after commit fallback',
+          alreadyPaid: true,
+        });
+      }
+
+      if (isTimeout || isSessionExpired) {
+        return NextResponse.json(
+          {
+            success: false,
+            pendingVerification: true,
+            orderId: fallbackOrder?.id || order_id || null,
+            error: 'No pudimos confirmar el pago de inmediato. Estamos verificando tu pedido.',
+            errorCode: error.code,
+          },
+          { status: 202 }
+        );
+      }
       
       return NextResponse.json(
         { 
@@ -75,7 +123,7 @@ export async function POST(request: NextRequest) {
             ? 'La sesión de pago ha expirado. Por favor, intenta realizar el pago nuevamente.'
             : 'Error al procesar el pago',
           success: false,
-          isTimeout: isTimeout || isSessionExpired,
+          isTimeout: isTimeout,
           errorCode: error.code,
         },
         { status: isTimeout ? 504 : 400 }
@@ -108,7 +156,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Find order - prioritize order_id if provided, then token, then buy_order
-    const supabaseAdmin = getSupabaseAdmin();
     const buyOrder = response.buy_order || '';
     let orderData = null;
     let orderId = null;

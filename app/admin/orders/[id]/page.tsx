@@ -233,7 +233,7 @@ export default function OrderDetailPage() {
               </div>
               {order.transbank_token && (
                 <div className="flex flex-col gap-1 pt-2 border-t border-gray-200">
-                  <span className="text-gray-600 text-sm">Transbank Token (para integración):</span>
+                  <span className="text-gray-600 text-sm">Transbank Token:</span>
                   <code className="text-xs font-mono bg-gray-100 p-2 rounded break-all text-gray-900">
                     {order.transbank_token}
                   </code>
