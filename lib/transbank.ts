@@ -83,7 +83,9 @@ export function getReturnUrls(orderId: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://stgofineart.com';
   
   return {
-    returnUrl: `${baseUrl}/checkout/success?order_id=${orderId}`,
+    // Transbank sends token_ws to return_url as POST form data.
+    // This endpoint captures it and redirects to the success page with query params.
+    returnUrl: `${baseUrl}/api/transbank/return?order_id=${orderId}`,
     finalUrl: `${baseUrl}/checkout/success?order_id=${orderId}`,
   };
 }

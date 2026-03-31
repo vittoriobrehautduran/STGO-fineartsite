@@ -15,10 +15,46 @@ function CheckoutSuccessContent() {
   const tokenWs = searchParams.get("token_ws");
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'failed' | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<'processing' | 'success' | 'failed' | 'pending_verification' | null>(null);
 
   useEffect(() => {
     async function verifyPayment() {
+      // Re-check order status for a short period when commit response is missing.
+      // This avoids false "failed" screens when Transbank charged but callback is delayed.
+      const reconcileOrderStatus = async (resolvedOrderId: string | null, maxAttempts = 6, waitMs = 2500) => {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const targetOrderId = resolvedOrderId || new URLSearchParams(window.location.search).get("order_id");
+          if (!targetOrderId) break;
+
+          const { data: latestOrder } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("id", targetOrderId)
+            .single();
+
+          if (latestOrder) {
+            setOrder(latestOrder);
+
+            if (latestOrder.status === "paid") {
+              setPaymentStatus("success");
+              return "success";
+            }
+
+            if (latestOrder.status === "payment_failed") {
+              setPaymentStatus("failed");
+              return "failed";
+            }
+          }
+
+          if (attempt < maxAttempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, waitMs));
+          }
+        }
+
+        setPaymentStatus("pending_verification");
+        return "pending_verification";
+      };
+
       // If we have token_ws but no orderId, try to find order by token first
       if (tokenWs && !orderId) {
         try {
@@ -48,29 +84,6 @@ function CheckoutSuccessContent() {
       }
 
       try {
-        // Check for timeout: if order was created more than 5 minutes ago, session likely expired
-        let orderCreatedAt: Date | null = null;
-        if (currentOrderId) {
-          const { data: orderData } = await supabase
-            .from("orders")
-            .select("created_at, status")
-            .eq("id", currentOrderId)
-            .single();
-          
-          if (orderData) {
-            orderCreatedAt = new Date(orderData.created_at);
-            const minutesSinceCreation = (Date.now() - orderCreatedAt.getTime()) / (1000 * 60);
-            
-            // If order is older than 5 minutes and still in pending_payment, session likely expired
-            if (minutesSinceCreation > 5 && orderData.status === 'pending_payment') {
-              setPaymentStatus('failed');
-              setOrder(orderData as any);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-
         // If we have a token_ws, commit the transaction first
         if (tokenWs) {
           setPaymentStatus('processing');
@@ -110,8 +123,11 @@ function CheckoutSuccessContent() {
               console.error('CRITICAL: /api/transbank/commit endpoint not found. This is a deployment issue.');
             }
             
-            setPaymentStatus('failed');
-            // Still try to fetch order to show details
+            // Don't mark as failed immediately; reconcile DB first to avoid false negatives.
+            const reconciledStatus = await reconcileOrderStatus(currentOrderId);
+            if (reconciledStatus === "pending_verification") {
+              console.warn("Payment commit failed but order is still pending verification.");
+            }
           } else {
             const commitData = await commitResponse.json();
             console.log('Commit response:', commitData);
@@ -132,18 +148,10 @@ function CheckoutSuccessContent() {
                 }
               }
             } else {
-              setPaymentStatus('failed');
-              // Fetch order to show details even if payment failed
-              if (commitData.orderId) {
-                const { data: orderData } = await supabase
-                  .from("orders")
-                  .select("*")
-                  .eq("id", commitData.orderId)
-                  .single();
-                
-                if (orderData) {
-                  setOrder(orderData);
-                }
+              // If commit says failure, still reconcile before showing hard failure.
+              const reconciledStatus = await reconcileOrderStatus(commitData.orderId || currentOrderId);
+              if (reconciledStatus === "pending_verification") {
+                console.warn("Commit returned failure but final order state is still pending.");
               }
             }
           }
@@ -166,7 +174,7 @@ function CheckoutSuccessContent() {
               setOrder(orderData);
             }
             // If payment status wasn't set yet, check order status
-            if (!paymentStatus) {
+            if (!paymentStatus || paymentStatus === "processing") {
               if (orderData.status === 'paid') {
                 setPaymentStatus('success');
               } else if (orderData.status === 'payment_failed') {
@@ -177,7 +185,7 @@ function CheckoutSuccessContent() {
         }
       } catch (err: any) {
         console.error("Error verifying payment:", err);
-        setPaymentStatus('failed');
+        await reconcileOrderStatus(currentOrderId, 4, 2000);
       } finally {
         setLoading(false);
       }
@@ -233,6 +241,8 @@ function CheckoutSuccessContent() {
                 ? 'Procesando...' 
                 : paymentStatus === 'failed'
                 ? 'Tu pago no ha sido procesado'
+                : paymentStatus === 'pending_verification'
+                ? 'Estamos verificando tu pago'
                 : 'Tu pago ha sido procesado'}
             </h1>
             <p className="text-gray-600">
@@ -240,6 +250,8 @@ function CheckoutSuccessContent() {
                 ? 'Estamos verificando tu pago...'
                 : paymentStatus === 'failed'
                 ? 'La sesión de pago ha expirado o el pago no pudo ser procesado. Por favor, intenta realizar el pago nuevamente.'
+                : paymentStatus === 'pending_verification'
+                ? 'Tu banco puede haber aprobado el cargo, pero aún no recibimos la confirmación final. Revisaremos tu pedido y te confirmaremos por email.'
                 : 'Tu pedido ha sido recibido y está siendo procesado. Te contactaremos pronto con los detalles.'}
             </p>
             {order && (

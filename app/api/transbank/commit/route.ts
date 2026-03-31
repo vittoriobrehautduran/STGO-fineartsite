@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTransbankClient } from '@/lib/transbank';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+
+const SES_REGION = process.env.SES_REGION || "us-east-1";
+const SES_ACCESS_KEY_ID = process.env.SES_ACCESS_KEY_ID;
+const SES_SECRET_ACCESS_KEY = process.env.SES_SECRET_ACCESS_KEY;
+const AWS_SES_FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || "noreply@stgofineart.com";
+
+const sesClient = SES_ACCESS_KEY_ID && SES_SECRET_ACCESS_KEY
+  ? new SESClient({
+      region: SES_REGION,
+      credentials: {
+        accessKeyId: SES_ACCESS_KEY_ID,
+        secretAccessKey: SES_SECRET_ACCESS_KEY,
+      },
+    })
+  : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -101,7 +117,7 @@ export async function POST(request: NextRequest) {
     if (order_id) {
       const { data: orderById, error: idError } = await supabaseAdmin
         .from('orders')
-        .select('id, transbank_buy_order, transbank_token, total_amount, status')
+        .select('id, transbank_buy_order, transbank_token, total_amount, status, customer_email')
         .eq('id', order_id)
         .single();
       
@@ -125,7 +141,7 @@ export async function POST(request: NextRequest) {
     if (!orderData && token_ws) {
       const { data: orderByToken, error: tokenError } = await supabaseAdmin
         .from('orders')
-        .select('id, transbank_token, transbank_buy_order, total_amount, status')
+        .select('id, transbank_token, transbank_buy_order, total_amount, status, customer_email')
         .eq('transbank_token', token_ws)
         .single();
       
@@ -139,7 +155,7 @@ export async function POST(request: NextRequest) {
     if (!orderData && buyOrder) {
       const { data: orderByBuyOrder, error: buyOrderError } = await supabaseAdmin
         .from('orders')
-        .select('id, transbank_buy_order, transbank_token, total_amount, status')
+        .select('id, transbank_buy_order, transbank_token, total_amount, status, customer_email')
         .eq('transbank_buy_order', buyOrder)
         .single();
       
@@ -277,6 +293,20 @@ export async function POST(request: NextRequest) {
     // Call Supabase Edge Function to send Purchase event to Meta CAPI
     // Only if payment was approved
     if (isApproved) {
+      // Send customer confirmation email from backend once payment is approved.
+      // This runs server-side to avoid dependency on browser callbacks.
+      if (orderData.customer_email) {
+        try {
+          await sendOrderPaidEmail({
+            customerEmail: orderData.customer_email,
+            orderId,
+            amount: orderAmount,
+          });
+        } catch (emailError) {
+          console.warn('Could not send order confirmation email:', emailError);
+        }
+      }
+
       try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -342,5 +372,66 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+async function sendOrderPaidEmail(params: { customerEmail: string; orderId: string; amount: number }) {
+  if (!sesClient) {
+    return;
+  }
+
+  const subject = `Pago confirmado - Pedido ${params.orderId.substring(0, 8)}`;
+  const amountText = new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(params.amount || 0);
+
+  const textBody = `
+Tu pago fue confirmado correctamente.
+
+Pedido: ${params.orderId.substring(0, 8)}
+Monto: ${amountText}
+
+Gracias por comprar en STGO Fine Art.
+Te contactaremos pronto con los detalles de tu pedido.
+  `.trim();
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+    <h2 style="margin-bottom: 12px;">Pago confirmado</h2>
+    <p>Tu pago fue confirmado correctamente.</p>
+    <p><strong>Pedido:</strong> ${params.orderId.substring(0, 8)}</p>
+    <p><strong>Monto:</strong> ${amountText}</p>
+    <p>Gracias por comprar en STGO Fine Art. Te contactaremos pronto con los detalles de tu pedido.</p>
+  </body>
+</html>
+  `.trim();
+
+  const command = new SendEmailCommand({
+    Source: AWS_SES_FROM_EMAIL,
+    Destination: {
+      ToAddresses: [params.customerEmail],
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: "UTF-8",
+      },
+      Body: {
+        Text: {
+          Data: textBody,
+          Charset: "UTF-8",
+        },
+        Html: {
+          Data: htmlBody,
+          Charset: "UTF-8",
+        },
+      },
+    },
+  });
+
+  await sesClient.send(command);
 }
 
